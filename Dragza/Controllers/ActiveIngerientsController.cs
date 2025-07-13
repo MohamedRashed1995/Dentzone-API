@@ -45,5 +45,35 @@ namespace Dragza.API.Controllers
             var products = await _unitOfWork.ActiveIngredientRepository.GetAllAsync();
             return Ok(products);
         }
+
+        [HttpPut("credit-limit")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateIngredients(Guid id,[FromBody] ActiveIngredientDto dto)
+        {
+            var ing = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(id);
+            if (ing == null)
+            {
+                return NotFound();
+            }
+            ing.Name = dto.Name;
+             _unitOfWork.ActiveIngredientRepository.Update(ing);
+            await _unitOfWork.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetIngredient), new { id = ing.Id }, ing);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var ing = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(id);
+            if (ing == null)
+            {
+                return NotFound();
+            }
+            ing.IsDeleted = true; // Soft delete
+            _unitOfWork.ActiveIngredientRepository.Update(ing);
+            await _unitOfWork.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }
