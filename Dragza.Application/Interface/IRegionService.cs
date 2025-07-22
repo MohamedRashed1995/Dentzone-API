@@ -17,10 +17,12 @@ namespace Dragza.Application.Interface
         );
 
         Task<RegionWithUsersDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<RegionDto>> GetAllAsync();
+        Task<IEnumerable<RegionDto>> GetAllAsync(bool isActive);
         Task<RegionDto> CreateAsync(CreateRegionDto createDto);
         Task UpdateAsync(Guid id, UpdateRegionDto updateDto);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<UserDto>> GetUsersByRegionAsync(Guid regionId);
+        Task<bool> ChangeStatus(Guid id);
+
     }
 }

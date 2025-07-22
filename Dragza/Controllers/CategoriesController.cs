@@ -1,5 +1,6 @@
 ﻿using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
+using Dragza.Domain.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -19,17 +20,28 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> GetAll()
+       // [Authorize]
+        public async Task<IActionResult> GetAll(int lang)
         {
             var categories = await _categoryService.GetAllCategoriesAsync();
+            if (lang == 0) // Assuming 0 is for Arabic
+            {
+                foreach (var category in categories)
+                {
+                    category.Name = category.ArabicName ; // Simulating language change for demonstration
+                }
+            }
             return Ok(categories);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
+        public async Task<IActionResult> GetById(Guid id, int lang)
         {
             var category = await _categoryService.GetCategoryByIdAsync(id);
+            if (lang == 0) // Assuming 0 is for Arabic
+            {
+                category.Name = category.ArabicName; // Simulating language change for demonstration
+            }
             return Ok(category);
         }
 
@@ -42,7 +54,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
+        //[Authorize]
 
         public async Task<IActionResult> Update(Guid id, [FromBody] CreateCategoryDto dto)
         {

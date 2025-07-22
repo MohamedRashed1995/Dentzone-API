@@ -105,7 +105,7 @@ namespace Dragza.Infrastructure.Services
                 TotalAmount = totalAmount,
                 CreditUsed = creditAmount,
                 CashPaid = cashAmount,
-                CreditAccountId = creditAccountId
+                CreditAccountId = creditAccountId,
             };
 
             // Add order items
@@ -249,6 +249,8 @@ namespace Dragza.Infrastructure.Services
                 o => o.InventoryUserId == vendorId,
                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
+                              .Include(u => u.InventoryUser)
+                              .Include(u => u.PharmacyUser)
                               .Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.ProductPrice)
             );
@@ -269,6 +271,7 @@ namespace Dragza.Infrastructure.Services
             if (item.OrderId == removeItemDto.OrderId)
             {
                 _unitOfWork.OrderItemRepository.Delete(item);
+                _unitOfWork.SaveChangesAsync();
             }
         }
 

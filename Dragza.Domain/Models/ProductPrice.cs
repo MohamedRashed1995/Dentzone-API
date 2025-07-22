@@ -27,13 +27,13 @@ public partial class ProductPrice
 
     public int StockQuantity { get; set; }
 
-   // public Guid? MainCategoryId { get; set; }
+    public Guid? MainCategoryId { get; set; }
 
     public virtual Category Category { get; set; } = null!;
 
     public virtual User InventoryUser { get; set; } = null!;
 
-    //public virtual MainCategory? MainCategory { get; set; }
+    public virtual MainCategory? MainCategory { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

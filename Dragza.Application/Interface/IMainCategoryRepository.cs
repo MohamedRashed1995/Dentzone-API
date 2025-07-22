@@ -9,7 +9,7 @@ namespace Dragza.Application.Interface
 {
     public interface IMainCategoryRepository : IRepository<MainCategory>
     {
-        //Task<IEnumerable<Category>> GetCategoriesByMainCategoryAsync(Guid mainCategoryId);
-        //Task<IEnumerable<Product>> GetProductsByMainCategoryAsync(Guid mainCategoryId);
+        Task<IEnumerable<Category>> GetCategoriesByMainCategoryAsync(Guid mainCategoryId);
+        Task<IEnumerable<Product>> GetProductsByMainCategoryAsync(Guid mainCategoryId);
     }
 }

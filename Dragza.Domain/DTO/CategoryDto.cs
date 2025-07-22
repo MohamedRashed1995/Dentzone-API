@@ -12,5 +12,9 @@ namespace Dragza.Domain.DTO
         public string Name { get; set; }
         public string Pref { get; set; }
         public string Description { get; set; }
+        public Guid MainCategoryId { get; set; }
+        public string MainCategory { get; set; }
+        public string? ArabicName { get; set; }
+
     }
 }

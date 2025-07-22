@@ -41,6 +41,8 @@ public partial class User
 
     public decimal? MinOrder { get; set; }
 
+    public Guid? SubAreaId { get; set; }
+
     public virtual ICollection<BalanceAccount> BalanceAccounts { get; set; } = new List<BalanceAccount>();
 
     public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
@@ -60,6 +62,8 @@ public partial class User
     public virtual ICollection<ReturnOrder> ReturnOrderInventoryUsers { get; set; } = new List<ReturnOrder>();
 
     public virtual ICollection<ReturnOrder> ReturnOrderPharmacyUsers { get; set; } = new List<ReturnOrder>();
+
+    public virtual Governate? SubArea { get; set; }
 
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 

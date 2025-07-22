@@ -11,11 +11,14 @@ namespace Dragza.Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IFileStorageService _fileStorage;
 
-        public ProductService(IUnitOfWork unitOfWork, IMapper mapper)
+
+        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IFileStorageService fileStorage)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _fileStorage = fileStorage;
         }
 
         public async Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto)
@@ -33,7 +36,11 @@ namespace Dragza.Infrastructure.Services
             product.Id = Guid.NewGuid();
             product.CreatedAt = DateTime.UtcNow;
             product.ActiveIngerdientId = dto.ActiveIngredientId;
-
+            if (dto.Photo != null)
+            {
+                product.Image = await _fileStorage.SaveFileAsync(
+                       dto.Photo);
+            }
             await _unitOfWork.ProductRepository.AddAsync(product);
             await _unitOfWork.SaveChangesAsync();
 
@@ -49,9 +56,9 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<ProductResponseDto>(product);
         }
 
-        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted = false)
+        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted , string search)
         {
-            var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted);
+            var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted ,search);
             return _mapper.Map<List<ProductResponseDto>>(products);
         }
 
@@ -63,7 +70,13 @@ namespace Dragza.Infrastructure.Services
 
             _mapper.Map(dto, product);
             product.UpdatedAt = DateTime.UtcNow;
-
+            product.Id = id; // Ensure the ID remains the same
+            if (dto.Photo != null)
+            {
+                var filePath = await _fileStorage.SaveFileAsync(
+                       dto.Photo);
+                product.Image = filePath;
+            }
             if (dto.CategoryId.HasValue)
             {
                 var category = await _unitOfWork.CategoryRepository.GetByIdAsync(dto.CategoryId.Value);
@@ -78,6 +91,11 @@ namespace Dragza.Infrastructure.Services
                 product.ActiveIngerdientId = dto.ActiveIngredientId.Value;
             }
 
+            if (dto.Photo != null)
+            {
+                product.Image = await _fileStorage.SaveFileAsync(
+                       dto.Photo);
+            }
             _unitOfWork.ProductRepository.Update(product);
             await _unitOfWork.SaveChangesAsync();
 
@@ -141,6 +159,14 @@ namespace Dragza.Infrastructure.Services
         {
             var products = await _unitOfWork.ProductRepository.GetProductsByCategoryIdAsync(categoryId);
             return _mapper.Map<IEnumerable<ProductResponseDto>>(products);
+        }
+
+        public async Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId)
+        {
+            var products =  await _unitOfWork.ProductRepository.GetPricesWithAllProductByInventoryId(inventoryId);
+            var productPrice = _mapper.Map<List<ProductPrice>>(products); // This line now works correctly
+
+            return productPrice;
         }
     }
 }

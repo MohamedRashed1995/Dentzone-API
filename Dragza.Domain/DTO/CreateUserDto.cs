@@ -41,6 +41,7 @@ namespace Dragza.Domain.DTO
 
         public Guid? City { get; set; }
         public Guid? GovId { get; set; }
+        public Guid? RegionId { get; set; }
         public Guid RoleId { get; set; }
         public PharmacyDetailsDto? PharmacyDetails { get; set; }
 

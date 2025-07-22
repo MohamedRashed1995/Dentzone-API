@@ -2,11 +2,6 @@
 using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -52,16 +47,24 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<RegionWithUsersDto>(region);
         }
 
-        public async Task<IEnumerable<RegionDto>> GetAllAsync()
+        public async Task<IEnumerable<RegionDto>> GetAllAsync(bool isActive)
         {
-            var regions = await _unitOfWork.RegionRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<RegionDto>>(regions);
+            if (isActive)
+            {
+                var regions = await _unitOfWork.RegionRepository.GetAllAsync(a => a.IsDeleted != true);
+                return _mapper.Map<IEnumerable<RegionDto>>(regions);
+            }
+            else
+            {
+                var regions = await _unitOfWork.RegionRepository.GetAllAsync();
+                return _mapper.Map<IEnumerable<RegionDto>>(regions);
+            }
         }
 
         public async Task<RegionDto> CreateAsync(CreateRegionDto createDto)
         {
             var region = _mapper.Map<Region>(createDto);
-             await _unitOfWork.RegionRepository.AddAsync(region);
+            await _unitOfWork.RegionRepository.AddAsync(region);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<RegionDto>(region);
@@ -91,6 +94,22 @@ namespace Dragza.Infrastructure.Services
         {
             var users = await _unitOfWork.RegionRepository.GetUsersByRegionAsync(regionId);
             return _mapper.Map<IEnumerable<UserDto>>(users);
+        }
+
+        public async Task<bool> ChangeStatus(Guid id)
+        {
+            var region = await _unitOfWork.RegionRepository.GetByIdAsync(id);
+            if (region == null)
+                throw new KeyNotFoundException("region not found");
+            if (region.IsDeleted == null)
+                region.IsDeleted = true; // Toggle the status
+            else
+                region.IsDeleted = !region.IsDeleted; // Toggle the status
+
+            _unitOfWork.RegionRepository.Update(region);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
     }
 }

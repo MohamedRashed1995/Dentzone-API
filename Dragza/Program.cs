@@ -49,14 +49,32 @@ builder.Services.AddScoped<IBalanceService, BalanceService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IMainCategoryRepository, MainCategoryRepository>();
 builder.Services.AddScoped<IMainCategoryService, MainCategoryService>();
+builder.Services.AddScoped<IReportingRepository, ReportingRepository>();
+builder.Services.AddScoped<IBalanceReportingRepository, BalanceReportingRepository>();
+builder.Services.AddScoped<IGovernateRepository, GovernateRepository>();
+builder.Services.AddScoped<IGovernateService, GovernateService>();
+builder.Services.AddScoped<IReportingService, ReportingService>();
+builder.Services.AddScoped<IBalanceReportingService, BalanceReportingService>();
+builder.Services.AddScoped<IReturnReasonService, ReturnReasonService>();
 builder.Services.AddHttpContextAccessor(); // 👈 Add this line
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+});
 
+var allowedOrigins = new[]
+{
+    "https://drug-za-dashboard-test.vercel.app",
+    "https://drugzza.netlify.app",
+    "http://localhost:3000"
+};
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
         policy
               .AllowAnyOrigin()
+              .WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -172,15 +190,16 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dragza API v1");
     });
 
-}
+//}
+app.UseHttpsRedirection();
 
 app.UseCors("AllowAll"); // ✅ Correct place
 app.UseHttpsRedirection();

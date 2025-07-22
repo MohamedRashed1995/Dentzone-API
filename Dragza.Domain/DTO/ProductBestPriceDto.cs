@@ -14,5 +14,7 @@ namespace Dragza.Domain.DTO
         public decimal BestSalesPrice { get; set; }
         public DateTime PriceDate { get; set; }
         public UserDto InventoryUser { get; set; }
+        public string? ProductArabicName { get; set; }
+
     }
 }

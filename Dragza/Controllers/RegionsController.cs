@@ -19,7 +19,14 @@ public class RegionsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RegionDto>>> GetAll()
     {
-        var regions = await _service.GetAllAsync();
+        var regions = await _service.GetAllAsync(false);
+        return Ok(regions);
+    }
+
+    [HttpGet("GetAllActive")]
+    public async Task<ActionResult<IEnumerable<RegionDto>>> GetAllActive()
+    {
+        var regions = await _service.GetAllAsync(true);
         return Ok(regions);
     }
 
@@ -56,5 +63,12 @@ public class RegionsController : ControllerBase
     {
         var users = await _service.GetUsersByRegionAsync(regionId);
         return Ok(users);
+    }
+
+    [HttpPut("{id}/ChangeStatus")]
+    public async Task<IActionResult> ChangeStatus(Guid id)
+    {
+        await _service.ChangeStatus(id);
+        return NoContent();
     }
 }

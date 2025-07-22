@@ -12,10 +12,12 @@ namespace Dragza.Application.Interface
     {
         Task<UserResponseDto> RegisterUserAsync(CreateUserDto createUserDto);
         Task<JWTTokenDTO> LoginAsync(LoginDto loginDto);
-        Task<IEnumerable<UserDto>> GetAllUsers();
+        Task<List<UserDto>> GetAllUsers();
         Task<bool> DeleteUser(Guid id);
         Task<bool> DeActivateUser(Guid id);
         Task<IEnumerable<UserWithPharmacyDto>> GetUsersByRoleWithPharmacyAsync(Guid roleId);
         Task<UserDto> GetUser(Guid id);
+        Task<UserResponseDto> UpdateUserAsync(Guid userId,UpdateUserDto updateUserDto);
+
     }
 }

@@ -93,6 +93,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Users
                 .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
                  .Include(u => u.PharmacyDetailUsers)  // Ensure related data is loaded
+                 .Include(u => u.Region)
                  .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .ToListAsync();

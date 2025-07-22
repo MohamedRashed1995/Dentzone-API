@@ -16,19 +16,19 @@ namespace Dragza.Infrastructure.Services
         {
         }
 
-        //public async Task<IEnumerable<Category>> GetCategoriesByMainCategoryAsync(Guid mainCategoryId)
-        //{
-        //    return await _context.Categories
-        //        .Where(c => c.MainCategoryId == mainCategoryId)
-        //        .ToListAsync();
-        //}
+        public async Task<IEnumerable<Category>> GetCategoriesByMainCategoryAsync(Guid mainCategoryId)
+        {
+            return await _context.Categories
+                .Where(c => c.MainCategoryId == mainCategoryId)
+                .ToListAsync();
+        }
 
-        //public async Task<IEnumerable<Product>> GetProductsByMainCategoryAsync(Guid mainCategoryId)
-        //{
-        //    return await _context.Products
-        //        .Where(p => p.MainCategoryId == mainCategoryId)
-        //        .Include(p => p.Category)
-        //        .ToListAsync();
-        //}
+        public async Task<IEnumerable<Product>> GetProductsByMainCategoryAsync(Guid mainCategoryId)
+        {
+            return await _context.Products
+                .Where(p => p.MainCategoryId == mainCategoryId)
+                .Include(p => p.Category)
+                .ToListAsync();
+        }
     }
 }

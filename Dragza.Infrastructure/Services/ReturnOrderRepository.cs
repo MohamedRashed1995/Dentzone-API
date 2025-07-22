@@ -46,5 +46,36 @@ namespace Dragaza.Infrastructure.Repositories
                 .Include(ro => ro.ReturnedItems)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<ReturnOrder>> GetAllWithDetailsAsync()
+        {
+            return await _context.ReturnOrders
+                .Include(ro => ro.Order)
+                .Include(ro => ro.PharmacyUser)
+                .Include(ro => ro.InventoryUser)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.Product)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.Reason)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.ProductPrice)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<ReturnOrder?> GetByIdWithDetailsAsync(Guid id)
+        {
+            return await _context.ReturnOrders
+                .Include(ro => ro.Order)
+                .Include(ro => ro.PharmacyUser)
+                .Include(ro => ro.InventoryUser)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.Product)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.Reason)
+                .Include(ro => ro.ReturnedItems)
+                    .ThenInclude(ri => ri.ProductPrice)
+                .FirstOrDefaultAsync(ro => ro.Id == id);
+        }
     }
 }

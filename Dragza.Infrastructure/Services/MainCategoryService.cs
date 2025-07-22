@@ -51,6 +51,7 @@ namespace Dragza.Infrastructure.Services
             _mapper.Map(updateDto, existing);
              _unitOfWork.MainCategoryRepository.Update(existing);
             await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
 
         }
 
@@ -61,19 +62,20 @@ namespace Dragza.Infrastructure.Services
                 throw new KeyNotFoundException("MainCategory not found");
              _unitOfWork.MainCategoryRepository.Delete(existing);
             await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
 
         }
 
-        //public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(Guid mainCategoryId)
-        //{
-        //    var categories = await _unitOfWork.MainCategoryRepository.GetCategoriesByMainCategoryAsync(mainCategoryId);
-        //    return _mapper.Map<IEnumerable<CategoryDto>>(categories);
-        //}
+        public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(Guid mainCategoryId)
+        {
+            var categories = await _unitOfWork.MainCategoryRepository.GetCategoriesByMainCategoryAsync(mainCategoryId);
+            return _mapper.Map<IEnumerable<CategoryDto>>(categories);
+        }
 
-        //public async Task<IEnumerable<ProductDto>> GetProductsAsync(Guid mainCategoryId)
-        //{
-        //    var products = await _unitOfWork.MainCategoryRepository.GetProductsByMainCategoryAsync(mainCategoryId);
-        //    return _mapper.Map<IEnumerable<ProductDto>>(products);
-        //}
+        public async Task<IEnumerable<ProductDto>> GetProductsAsync(Guid mainCategoryId)
+        {
+            var products = await _unitOfWork.MainCategoryRepository.GetProductsByMainCategoryAsync(mainCategoryId);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
     }
 }

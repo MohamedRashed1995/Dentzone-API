@@ -1,5 +1,6 @@
 ﻿using Dragza.Application.Interface;
 using Dragza.Domain.DTO.ReturnOrder;
+using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -77,6 +78,26 @@ namespace Dragza.API.Controllers
             if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 throw new UnauthorizedAccessException("Invalid user identity");
             return userId;
+        }
+
+        [HttpGet("reaturns")]
+        public async Task<ActionResult<IEnumerable<ReturnOrderDto>>> GetAll()
+        {
+            var returnOrders = await _returnService.GetAllReturnOrdersAsync();
+            return Ok(returnOrders);
+        }
+
+        [HttpGet("GetWithDetailsById")]
+        public async Task<ActionResult<ReturnOrderDto>> GetWithDetailsById(Guid id)
+        {
+            var returnOrder = await _returnService.GetReturnOrderByIdAsync(id);
+
+            if (returnOrder == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(returnOrder);
         }
     }
 }

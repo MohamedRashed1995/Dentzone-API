@@ -12,7 +12,7 @@ namespace Dragza.Application.Interface
     {
         Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto);
         Task<ProductResponseDto> GetProductByIdAsync(Guid id);
-        Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted = false);
+        Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search);
         Task<ProductResponseDto> UpdateProductAsync(Guid id, UpdateProductDto dto);
         Task SoftDeleteProductAsync(Guid id);
         Task RestoreProductAsync(Guid id);
@@ -20,7 +20,7 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<BestSellerProductDto>> GetBestSellingProductsAsync(int topN = 10);
         Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId);
 
-
+        Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId);
 
     }
 }

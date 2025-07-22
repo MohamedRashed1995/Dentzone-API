@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Dragaza.Infrastructure.Repositories;
 using Dragza.Application.Interface;
+using Dragza.Domain.DTO;
 using Dragza.Domain.DTO.ReturnOrder;
 using Dragza.Domain.Enum;
 using Dragza.Domain.Models;
@@ -127,6 +129,23 @@ namespace Dragza.Infrastructure.Services
 
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<ReturnOrderDto>(returnOrder);
+        }
+
+        public async Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync()
+        {
+            var returnOrders = await _unitOfWork.ReturnOrderRepository.GetAllWithDetailsAsync();
+            return _mapper.Map<IEnumerable<ReturnOrderDto>>(returnOrders);
+        }
+
+        public async Task<ReturnOrderDto?> GetReturnOrderByIdAsync(Guid id)
+        {
+            var returnOrder = await _unitOfWork.ReturnOrderRepository.GetByIdWithDetailsAsync(id);
+            return _mapper.Map<ReturnOrderDto>(returnOrder);
+        }
+
+        Task<IEnumerable<ReturnReasonDto>> IReturnOrderService.GetReturnReasonsAsync()
+        {
+            throw new NotImplementedException();
         }
 
         private bool IsValidStatusTransition(ReturnOrderStatus current, ReturnOrderStatus newStatus)

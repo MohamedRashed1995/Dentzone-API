@@ -24,14 +24,14 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
         {
-            var categories = await _unitOfWork.CategoryRepository.GetAllAsync();
+            var categories = await _unitOfWork.CategoryRepository.GetAllAsync(include: q => q.Include(o => o.MainCategory));
             return _mapper.Map<IEnumerable<CategoryDto>>(categories);
         }
 
         public async Task<CategoryDto> GetCategoryByIdAsync(Guid id)
         {
-            var category = await _unitOfWork.CategoryRepository.GetByIdAsync(id);
-            return _mapper.Map<CategoryDto>(category);
+            var category = await _unitOfWork.CategoryRepository.GetAllAsync(o => o.Id == id, include: q => q.Include(o => o.MainCategory));
+            return _mapper.Map<CategoryDto>(category.FirstOrDefault());
         }
 
         public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto categoryDto)
@@ -58,11 +58,13 @@ namespace Dragza.Infrastructure.Services
             // Update category properties
             _mapper.Map(categoryDto, category);
             category.UpdatedAt = DateTime.UtcNow;
+            category.Id = id; // Ensure the ID remains the same
 
             try
             {
                 _unitOfWork.CategoryRepository.Update(category);
                 await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -82,6 +84,7 @@ namespace Dragza.Infrastructure.Services
             {
                 _unitOfWork.CategoryRepository.Delete(category);
                 await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch (DbUpdateException ex)
             {

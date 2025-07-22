@@ -97,5 +97,47 @@ namespace Dragza.Infrastructure.Services
             var prices = await _unitOfWork.ProductPriceRepository.GetPricesByInventoryUser(userId);
             return _mapper.Map<IEnumerable<InventoryUserPriceDetailsDto>>(prices);
         }
+
+        public async Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity , Guid userId)
+        {
+            if (productPriceId != Guid.Empty && productPriceId != null)
+            {
+                var productPrice = await _unitOfWork.ProductPriceRepository.GetByIdAsync(productPriceId);
+
+                if (productPrice != null)
+                {
+                    // Update existing
+                    productPrice.SalesPrice = salesPrice;
+                    productPrice.PurchasePrice = purchasePrice;
+                    productPrice.StockQuantity = quantity;
+                    productPrice.UpdatedDate = DateTime.UtcNow;
+                }
+            }
+            else
+            {
+
+                if (productId == Guid.Empty)
+                    throw new ArgumentException("Product ID cannot be empty", nameof(productId));
+                var product = await _unitOfWork.ProductRepository.GetByIdAsync(productId);
+                if (product != null)
+                {
+                    // Create new
+                    var productPrice = new ProductPrice
+                    {
+                        Id = productPriceId,
+                        ProductId = productId,
+                        SalesPrice = salesPrice,
+                        PurchasePrice = purchasePrice,
+                        StockQuantity = quantity,
+                        CreationDate = DateTime.UtcNow,
+                        IsDeleted = false,
+                        InventoryUserId = userId
+                    };
+                    await _unitOfWork.ProductPriceRepository.AddAsync(productPrice);
+                }
+            }
+
+            await _unitOfWork.CommitAsync();
+        }
     }
 }

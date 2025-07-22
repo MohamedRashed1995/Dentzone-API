@@ -12,5 +12,7 @@ namespace Dragza.Domain.DTO
         public string RegionName { get; set; }
         public string Lang { get; set; }
         public string Lat { get; set; }
+        public bool? IsDeleted { get; set; }
+
     }
 }

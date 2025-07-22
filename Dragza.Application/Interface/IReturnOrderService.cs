@@ -1,4 +1,5 @@
-﻿using Dragza.Domain.DTO.ReturnOrder;
+﻿using Dragza.Domain.DTO;
+using Dragza.Domain.DTO.ReturnOrder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,7 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ReturnOrderDto>> GetPharmacyReturnsAsync(Guid pharmacyId);
         Task<IEnumerable<ReturnOrderDto>> GetVendorReturnsAsync(Guid vendorId);
         Task<IEnumerable<ReturnReasonDto>> GetReturnReasonsAsync();
+        Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync();
+        Task<ReturnOrderDto?> GetReturnOrderByIdAsync(Guid id);
     }
 }

@@ -32,10 +32,10 @@ namespace Dragza.Infrastructure.Services
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             var dto = _mapper.Map<UserDto>(user);
-            if (dto != null && user.IsPharmacy == true)
-            {
-                dto.Accountid = user.BalanceAccounts.FirstOrDefault().Id;
-            }
+            //if (dto != null && user.IsPharmacy == true)
+            //{
+            //    dto.Accountid = user.BalanceAccounts.FirstOrDefault().Id;
+            //}
             return dto;
         }
         public async Task<bool> DeleteUser(Guid id)
@@ -52,15 +52,27 @@ namespace Dragza.Infrastructure.Services
             return false;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllUsers()
+        public async Task<List<UserDto>> GetAllUsers()
         {
-            var users = await _unitOfWork.UserRepository.GetAllAsync(
-                    include: q => q.Include(u => u.Region)
-                       .Include(u => u.ProductPrices)
-    );
+            try
+            {
+                var users = (await _unitOfWork.UserRepository.GetAllAsync(
+                        include: q => q.Include(u => u.Region)
+                       )).ToList();
 
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+                if (users == null || !users.Any())
+                    return new List<UserDto>();
 
+                // Test with single user first for debugging
+                //var testDto = _mapper.Map<UserDto>(users.First());
+
+                return _mapper.Map<List<UserDto>>(users);
+
+            }
+            catch (Exception ex)
+            {
+                return new List<UserDto>();
+            }
         }
 
         public async Task<JWTTokenDTO> LoginAsync(LoginDto loginDto)
@@ -92,6 +104,20 @@ namespace Dragza.Infrastructure.Services
                 var user = _mapper.Map<User>(createUserDto);
                 user.Id = Guid.NewGuid();
                 user.Password = _passwordHasher.HashPassword(createUserDto.Password);
+                user.IsActive = true; // Default to active
+                user.IsDeleted = false;
+                if((createUserDto.GovId != null 
+                    && createUserDto.GovId != Guid.Empty) 
+                    &&( createUserDto.RegionId == null
+                    ||createUserDto.RegionId == Guid.Empty))
+                {
+                    user.RegionId = createUserDto.GovId;
+                }
+                else
+                {
+                    user.RegionId = createUserDto.RegionId;
+                }
+
                 user.CreatedAt = DateTime.UtcNow;
                 if (createUserDto.Photo != null)
                 {
@@ -193,17 +219,101 @@ namespace Dragza.Infrastructure.Services
             if (user != null && user.IsActive == true)
             {
                 user.IsActive = false;
-                //user.DeletedDate = DateTime.UtcNow;
                  _unitOfWork.UserRepository.Update(user);
-                _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
             }else if (user != null && user.IsActive == false)
             {
                 user.IsActive = true;
-                //user.DeletedDate = DateTime.UtcNow;
                 _unitOfWork.UserRepository.Update(user);
-                _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
+            }
+            else if(user != null && user.IsActive == null)
+            {
+                user.IsActive = false;
+                _unitOfWork.UserRepository.Update(user);
+                await _unitOfWork.CommitAsync();
             }
             return false;
         }
+
+        public async Task<UserResponseDto> UpdateUserAsync(Guid userid ,UpdateUserDto createUserDto)
+        {
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(userid);
+
+                _mapper.Map(createUserDto, existingUser);
+                if (createUserDto.Password != null)
+                        existingUser.Password = _passwordHasher.HashPassword(createUserDto.Password);
+
+                if (createUserDto.Photo != null)
+                {
+                    existingUser.Photo = await _fileStorage.SaveFileAsync(
+                           createUserDto.Photo);
+                }
+                // Handle pharmacy details
+                if (createUserDto.IsPharmacy)
+                {
+                    if (existingUser.PharmacyDetailUsers != null)
+                    {
+                        var existingPharmacy = existingUser.PharmacyDetailUsers.FirstOrDefault();
+
+                        _mapper.Map(createUserDto.PharmacyDetails, existingPharmacy);
+
+
+                        if (createUserDto.PharmacyDetails.CommercialRegisteryAttach != null)
+                        {
+
+                            existingPharmacy.CommercialRegisteryAttach = await _fileStorage.SaveFileAsync(
+                                createUserDto.PharmacyDetails.CommercialRegisteryAttach);
+                        }
+
+                        if (createUserDto.PharmacyDetails.NationalIdAttach != null)
+                        {
+                            existingPharmacy.NationalIdAttach = await _fileStorage.SaveFileAsync(
+        createUserDto.PharmacyDetails.NationalIdAttach);
+                        }
+
+                        if (createUserDto.PharmacyDetails.TaxationCardAttach != null)
+                        {
+                            existingPharmacy.TaxationCardAttach = await _fileStorage.SaveFileAsync(
+       createUserDto.PharmacyDetails.TaxationCardAttach);
+                        }
+
+                        if (createUserDto.PharmacyDetails.OwnersgipAttach != null)
+                        {
+                            existingPharmacy.OwnersgipAttach = await _fileStorage.SaveFileAsync(
+      createUserDto.PharmacyDetails.OwnersgipAttach);
+                        }
+
+                        if (createUserDto.PharmacyDetails.PharmacyLicenseAttach != null)
+                        {
+                            existingPharmacy.PharmacyLicenseAttach = await _fileStorage.SaveFileAsync(
+      createUserDto.PharmacyDetails.PharmacyLicenseAttach);
+                        }
+
+
+                         _unitOfWork.PharmacyDetailRepository.Update(existingPharmacy);
+                    }
+                }
+
+
+                _unitOfWork.UserRepository.Update(existingUser);
+                await _unitOfWork.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return _mapper.Map<UserResponseDto>(existingUser);
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+
+        }
+
     }
 }

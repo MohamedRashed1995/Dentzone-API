@@ -21,7 +21,6 @@ namespace Dragza.Application.Interface
         IReturnedItemRepository ReturnedItemRepository { get; }
         IReturnOrderRepository ReturnOrderRepository { get; }
         IReturnReasonRepository ReturnReasonRepository { get; }
-        IRepository<Governate> GovernateRepository { get; }
         IRepository<City> CityRepository { get; }
         IRepository<Destrict> DestrictRepository { get; }
         IRegionRepository RegionRepository { get; }
@@ -35,6 +34,7 @@ namespace Dragza.Application.Interface
         IInvoiceRepository InvoiceRepository { get;}
         IInvoiceTypeRepository InvoiceTypeRepository { get;}
         IMainCategoryRepository MainCategoryRepository { get;}
+        IGovernateRepository GovernateRepository { get;}
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task CommitAsync();
         Task RollbackAsync();

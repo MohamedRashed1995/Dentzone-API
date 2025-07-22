@@ -11,6 +11,8 @@ public partial class MainCategory
 
     public string? Description { get; set; }
 
+    public string? ArabicName { get; set; }
+
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
 
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();

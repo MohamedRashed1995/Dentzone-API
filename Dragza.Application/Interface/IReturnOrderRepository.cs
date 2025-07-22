@@ -12,5 +12,8 @@ namespace Dragza.Application.Interface
         Task<ReturnOrder> GetWithItemsAsync(Guid id);
         Task<IEnumerable<ReturnOrder>> GetByPharmacyAsync(Guid pharmacyId);
         Task<IEnumerable<ReturnOrder>> GetByInventoryUserAsync(Guid inventoryUserId);
+
+        Task<IEnumerable<ReturnOrder>> GetAllWithDetailsAsync();
+        Task<ReturnOrder?> GetByIdWithDetailsAsync(Guid id);    
     }
 }

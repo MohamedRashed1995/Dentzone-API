@@ -16,6 +16,7 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ProductPriceDetailsDto>> GetPricesByProductAsync(Guid productId);
 
         Task<IEnumerable<InventoryUserPriceDetailsDto>> GetPricesByInventoryUserAsync(Guid userId);
+        Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity , Guid userId);
 
     }
 }

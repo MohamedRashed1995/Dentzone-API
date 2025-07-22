@@ -1,8 +1,10 @@
 ﻿using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
+using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Dragza.API.Controllers
 {
@@ -11,16 +13,20 @@ namespace Dragza.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService , ILogger<UsersController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
 
         public async Task<IActionResult> Register([FromForm] CreateUserDto createUserDto)
         {
+            _logger.LogInformation("Register object :: {0}" ,JsonConvert.SerializeObject(createUserDto) );
+
             await _userService.RegisterUserAsync(createUserDto);
             var loginDto = new LoginDto
             {
@@ -28,6 +34,20 @@ namespace Dragza.API.Controllers
                 Password = createUserDto.Password
             };
             var result = await _userService.LoginAsync(loginDto);
+
+            return Ok(result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(Guid id, [FromForm] UpdateUserDto updateUserDto)
+        {
+
+            var result = await _userService.UpdateUserAsync(id, updateUserDto);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
 
             return Ok(result);
         }
@@ -40,7 +60,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet("users")]
-        [Authorize]
+       // [Authorize]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _userService.GetAllUsers();
@@ -48,7 +68,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet("user")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetUsers(Guid userid)
         {
             var users = await _userService.GetUser(userid);
@@ -64,7 +84,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet("by-role/{roleId}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUsersByRoleWithPharmacy(Guid roleId)
         {
             try
@@ -81,8 +101,7 @@ namespace Dragza.API.Controllers
         [HttpPost("deActive-user")]
         public async Task<IActionResult> DeActivatUser([FromBody] Guid Id)
         {
-            var result = await _userService.DeActivateUser(Id
-                );
+            var result = await _userService.DeActivateUser(Id);
             return Ok(result);
         }
     }

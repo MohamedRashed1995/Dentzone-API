@@ -11,6 +11,7 @@ namespace Dragza.Domain.DTO
         public Guid Id { get; set; }
         public Guid ProductId { get; set; }
         public string ProductName { get; set; }
+        public string? ProductArabicName { get; set; }
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public decimal PurchasePrice { get; set; }
@@ -19,6 +20,5 @@ namespace Dragza.Domain.DTO
         public Guid InventoryUserId { get; set; }
         public string InventoryUserName { get; set; }
         public int StockQuantity { get; set; }
-
     }
 }

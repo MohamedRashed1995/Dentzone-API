@@ -42,7 +42,7 @@ public partial class DragzaContext : DbContext
 
     public virtual DbSet<InvoiceType> InvoiceTypes { get; set; }
 
-   // public virtual DbSet<MainCategory> MainCategories { get; set; }
+    public virtual DbSet<MainCategory> MainCategories { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
 
@@ -149,9 +149,9 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Pref).HasMaxLength(100);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
-            //entity.HasOne(d => d.MainCategory).WithMany(p => p.Categories)
-            //    .HasForeignKey(d => d.MainCategoryId)
-            //    .HasConstraintName("FK_Category_MainCategory");
+            entity.HasOne(d => d.MainCategory).WithMany(p => p.Categories)
+                .HasForeignKey(d => d.MainCategoryId)
+                .HasConstraintName("FK_Category_MainCategory");
         });
 
         modelBuilder.Entity<City>(entity =>
@@ -341,12 +341,12 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
         });
 
-        //modelBuilder.Entity<MainCategory>(entity =>
-        //{
-        //    entity.ToTable("MainCategory");
+        modelBuilder.Entity<MainCategory>(entity =>
+        {
+            entity.ToTable("MainCategory");
 
-        //    entity.Property(e => e.Id).ValueGeneratedNever();
-        //});
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
 
         modelBuilder.Entity<Order>(entity =>
         {
@@ -437,6 +437,7 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.DeletedDate).HasColumnType("datetime");
+            entity.Property(e => e.Image).HasMaxLength(1);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.Preef).HasMaxLength(100);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
@@ -450,9 +451,9 @@ public partial class DragzaContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Product_Category");
 
-            //entity.HasOne(d => d.MainCategory).WithMany(p => p.Products)
-            //    .HasForeignKey(d => d.MainCategoryId)
-            //    .HasConstraintName("FK_Product_MainCategory");
+            entity.HasOne(d => d.MainCategory).WithMany(p => p.Products)
+                .HasForeignKey(d => d.MainCategoryId)
+                .HasConstraintName("FK_Product_MainCategory");
         });
 
         modelBuilder.Entity<ProductPrice>(entity =>
@@ -476,9 +477,9 @@ public partial class DragzaContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProductPrice_User");
 
-            //entity.HasOne(d => d.MainCategory).WithMany(p => p.ProductPrices)
-            //    .HasForeignKey(d => d.MainCategoryId)
-            //    .HasConstraintName("FK_ProductPrice_MainCategory");
+            entity.HasOne(d => d.MainCategory).WithMany(p => p.ProductPrices)
+                .HasForeignKey(d => d.MainCategoryId)
+                .HasConstraintName("FK_ProductPrice_MainCategory");
 
             entity.HasOne(d => d.Product).WithMany(p => p.ProductPrices)
                 .HasForeignKey(d => d.ProductId)
@@ -590,6 +591,10 @@ public partial class DragzaContext : DbContext
             entity.HasOne(d => d.Region).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RegionId)
                 .HasConstraintName("FK_User_Region");
+
+            entity.HasOne(d => d.SubArea).WithMany(p => p.Users)
+                .HasForeignKey(d => d.SubAreaId)
+                .HasConstraintName("FK_User_Governate");
         });
 
         modelBuilder.Entity<UserRole>(entity =>

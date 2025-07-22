@@ -106,5 +106,19 @@ namespace Dragza.API.Controllers
                 return StatusCode(500, "An error occurred while retrieving prices");
             }
         }
+        [HttpGet("by-inventory-product")]
+        public async Task<IActionResult> GetPricesByInventoryProduct(Guid userId , Guid productId)
+        {
+            try
+            {
+                var prices = await _priceService.GetPricesByInventoryUserAsync(userId);
+                var result = prices.Where(p => p.ProductId == productId).FirstOrDefault();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving prices");
+            }
+        }
     }
 }

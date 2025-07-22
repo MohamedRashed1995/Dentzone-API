@@ -12,5 +12,7 @@ namespace Dragza.Domain.DTO
         public string ProductName { get; set; }
         public int TotalQuantitySold { get; set; }
         public decimal TotalRevenue { get; set; }
+        public string? ProductArabicName { get; set; }
+
     }
 }

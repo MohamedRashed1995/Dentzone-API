@@ -122,7 +122,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet("vendor-orders")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetVendorOrders([FromQuery] Guid userId)
         {
             //var vendorId = GetCurrentUserId();

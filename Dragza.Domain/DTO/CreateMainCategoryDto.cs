@@ -15,5 +15,7 @@ namespace Dragza.Domain.DTO
 
         [StringLength(500)]
         public string Description { get; set; }
+        public string? ArabicName { get; set; }
+
     }
 }

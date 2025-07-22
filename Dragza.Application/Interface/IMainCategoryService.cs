@@ -15,7 +15,7 @@ namespace Dragza.Application.Interface
         Task UpdateAsync(Guid id, UpdateMainCategoryDto updateDto);
         Task DeleteAsync(Guid id);
 
-        //Task<IEnumerable<CategoryDto>> GetCategoriesAsync(Guid mainCategoryId);
-        //Task<IEnumerable<ProductDto>> GetProductsAsync(Guid mainCategoryId);
+        Task<IEnumerable<CategoryDto>> GetCategoriesAsync(Guid mainCategoryId);
+        Task<IEnumerable<ProductDto>> GetProductsAsync(Guid mainCategoryId);
     }
 }

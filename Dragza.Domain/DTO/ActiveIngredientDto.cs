@@ -9,5 +9,6 @@ namespace Dragza.Domain.DTO
     public class ActiveIngredientDto
     {
         public string Name { get; set; }
+        public Guid Id { get; set; }
     }
 }

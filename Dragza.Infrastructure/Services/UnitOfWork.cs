@@ -34,8 +34,6 @@ namespace Dragza.Infrastructure.Services
         public IReturnReasonRepository ReturnReasonRepository => new ReturnReasonRepository(_context);
         public IReturnedItemRepository ReturnedItemRepository => new ReturnedItemRepository(_context);
         public IReturnOrderRepository ReturnOrderRepository => new ReturnOrderRepository(_context);
-
-        public IRepository<Governate> GovernateRepository => new Repository<Governate>(_context);
         public IRepository<City> CityRepository => new Repository<City>(_context);
         public IRepository<Destrict> DestrictRepository => new Repository<Destrict>(_context);
         public IRegionRepository RegionRepository => new RegionRepository(_context);
@@ -50,6 +48,7 @@ namespace Dragza.Infrastructure.Services
         public IInvoiceRepository InvoiceRepository => new InvoiceRepository(_context);
         public IInvoiceTypeRepository InvoiceTypeRepository => new InvoiceTypeRepository(_context);
         public IMainCategoryRepository MainCategoryRepository => new MainCategoryRepository(_context);
+        public IGovernateRepository GovernateRepository => new GovernateRepository(_context);
 
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {

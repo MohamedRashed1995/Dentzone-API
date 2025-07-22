@@ -1,4 +1,5 @@
-﻿using Dragza.Application.Data;
+﻿using AutoMapper;
+using Dragza.Application.Data;
 using Dragza.Application.Interface;
 using Dragza.Domain.Models;
 using Google;
@@ -13,7 +14,10 @@ namespace Dragza.Infrastructure.Services
 {
     public class ProductRepository : Repository<Product>, IProductRepository
     {
-        public ProductRepository(DragzaContext context) : base(context) { }
+        private readonly IMapper _mapper;
+        public ProductRepository(DragzaContext context ) : base(context) 
+        {
+        }
 
         public async Task<Product> GetProductWithDetailsAsync(Guid id)
         {
@@ -25,17 +29,22 @@ namespace Dragza.Infrastructure.Services
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted = false)
+        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted , string search)
         {
-            return await _context.Products
+            var query =  _context.Products
                 .Where(p => p.IsDeleted != true)
                 .Include(p => p.Category)
                 .Include(p => p.ActiveIngerdient)
                 .Include(p => p.ProductPrices)
                     .ThenInclude(pp => pp.InventoryUser)
-                .ToListAsync();
-        }
+                .AsQueryable();
 
+            
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
+
+            return await query.ToListAsync();
+        }
         public async Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId)
         {
             return await _context.Products
@@ -57,6 +66,8 @@ namespace Dragza.Infrastructure.Services
         public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
         {
             return await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ActiveIngerdient)
                 .Where(p => p.CategoryId == categoryId && (p.IsDeleted == null || p.IsDeleted == false))
                 .ToListAsync();
         }
@@ -83,6 +94,20 @@ namespace Dragza.Infrastructure.Services
                 .Include(pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
+        }
+
+        public async Task<List<Product>> GetPricesWithAllProductByInventoryId(Guid inventoryId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ActiveIngerdient)
+                .Include(p => p.ProductPrices)
+                    .ThenInclude(pp => pp.InventoryUser)
+                .Where(p => p.IsDeleted != true && p.ProductPrices.Any(x => x.InventoryUserId == inventoryId))
+                .ToListAsync();
+
+            return products;
+
         }
     }
 }

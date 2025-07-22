@@ -11,6 +11,8 @@ namespace Dragza.Domain.DTO
         public Guid Id { get; set; }
         public string UserName { get; set; }
         public string Email { get; set; }
+        public Guid RegionId { get; set; }
+        public string RegionName { get; set; }
         public bool IsPharmacy { get; set; }
         public PharmacyDetailsResponseDto? PharmacyDetails { get; set; }
     }

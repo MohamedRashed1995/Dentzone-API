@@ -25,7 +25,11 @@ public partial class Product
 
     public Guid? ActiveIngerdientId { get; set; }
 
-   // public Guid? MainCategoryId { get; set; }
+    public Guid? MainCategoryId { get; set; }
+
+    public string? Image { get; set; }
+
+    public string? ArabicName { get; set; }
 
     public virtual ActiveIngredient? ActiveIngerdient { get; set; }
 
@@ -33,7 +37,7 @@ public partial class Product
 
     public virtual Category Category { get; set; } = null!;
 
-   // public virtual MainCategory? MainCategory { get; set; }
+    public virtual MainCategory? MainCategory { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

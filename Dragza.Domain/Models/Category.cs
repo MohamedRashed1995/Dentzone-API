@@ -19,9 +19,11 @@ public partial class Category
 
     public bool? IsDeleted { get; set; }
 
-   // public Guid? MainCategoryId { get; set; }
+    public Guid? MainCategoryId { get; set; }
 
-   // public virtual MainCategory? MainCategory { get; set; }
+    public string? ArabicName { get; set; }
+
+    public virtual MainCategory? MainCategory { get; set; }
 
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
 
