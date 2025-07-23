@@ -46,8 +46,8 @@ namespace Dragza.API.Controllers
             return Ok(products);
         }
 
-        [HttpPut("credit-limit")]
-        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateIngredients(Guid id,[FromBody] ActiveIngredientDto dto)
         {
             var ing = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(id);

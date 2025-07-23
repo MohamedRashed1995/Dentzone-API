@@ -53,13 +53,14 @@ namespace Dragza.Application.Mapping
 
             CreateMap<Order, OrderDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => (OrderStatus)src.Status))
-            .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.InventoryUser.UserName))
-            .ForMember(dest => dest.PharmacyName, opt => opt.MapFrom(src => src.PharmacyUser.UserName))
+            .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.InventoryUser == null ? string.Empty : src.InventoryUser.UserName))
+            .ForMember(dest => dest.PharmacyName, opt => opt.MapFrom(src => src.PharmacyUser == null ? string.Empty : src.PharmacyUser.UserName))
             .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderItems));
 
             CreateMap<OrderItem, OrderItemDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
                 .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser.UserName))
+                .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser == null ? string.Empty : src.ProductPrice.InventoryUser.UserName))
             .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.ProductPrice.PurchasePrice));
             CreateMap<OrderItemDto, OrderItem>();
 

@@ -237,8 +237,11 @@ namespace Dragza.Infrastructure.Services
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
                                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
-                              .Include(o => o.OrderItems)
-                              .ThenInclude(oi => oi.ProductPrice)
+                              .ThenInclude(oi => oi.ProductPrices)
+                              .ThenInclude(oi => oi.InventoryUser)
+                              .Include(o => o.InventoryUser)
+                              .Include(o => o.PharmacyUser)
+                              //.ThenInclude(oi => oi.ProductPrice)
             );
             return _mapper.Map<List<OrderDto>>(orders);
         }
@@ -281,8 +284,8 @@ namespace Dragza.Infrastructure.Services
             if (order == null) throw new KeyNotFoundException("Order not found");
 
             // Authorization check
-            if (order.InventoryUserId != userId)
-                throw new UnauthorizedAccessException("Not authorized to modify this order");
+            //if (order.InventoryUserId != userId)
+            //    throw new UnauthorizedAccessException("Not authorized to modify this order");
 
             if (!IsValidStatusTransition((OrderStatus)order.Status, status))
                 throw new InvalidOperationException("Invalid status transition");

@@ -105,7 +105,7 @@ namespace Dragza.API.Controllers
             return Ok(order);
         }
         [HttpGet("orders")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> AllOrders()
         {
             var order = await _orderService.GetAllorders();
