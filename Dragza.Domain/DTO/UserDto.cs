@@ -40,6 +40,8 @@ namespace Dragza.Domain.DTO
         public DateTime? DeletedDate { get; set; }
 
         public Guid? RegionId { get; set; }
+        public Guid? SubAreaId { get; set; }
         public string? RegionName { get; set; }
+        public string? SubAreaName { get; set; }
     }
 }

@@ -33,13 +33,19 @@ namespace Dragza.Infrastructure.Services
                 var order = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(dto.OrderId);
                 if (order == null) throw new KeyNotFoundException("Order not found");
 
+                //// Validate user exists
+                //var userExists = await _unitOfWork.UserRepository.ExistsAsync(order.PharmacyUserId);
+                //if (!userExists) throw new KeyNotFoundException("User not found");
+
                 var returnOrder = new ReturnOrder
                 {
                     Id = Guid.NewGuid(),
                     OrderId = dto.OrderId,
-                    PharmacyUserId = pharmacyUserId,
+                    PharmacyUserId = order.PharmacyUserId,
                     RequestDate = DateTime.UtcNow,
                     Statuse = (int)ReturnOrderStatus.Requested,
+                    InventoryUserId = order.OrderItems.First().ProductPrice.InventoryUserId, // CRITICAL FIX: Add missing InventoryUserId
+                    AdminApproval = false,
                     ReturnedItems = new List<ReturnedItem>()
                 };
 
@@ -66,15 +72,16 @@ namespace Dragza.Infrastructure.Services
                         ReasonId = item.ReasonId,
                         OtherReason = item.OtherReason,
                         TotalAmount = item.QuantityReturned * orderItem.Amount / orderItem.Quantity,
-                        ReturnOrderId = returnOrder.Id
+                        ReturnOrderId = returnOrder.Id,
+                        OrderId = order.Id // CRITICAL FIX: Add missing OrderId
                     };
 
                     totalValue += returnedItem.TotalAmount;
                     returnOrder.ReturnedItems.Add(returnedItem);
-                    await _unitOfWork.ReturnedItemRepository.AddAsync(returnedItem);
                 }
 
                 returnOrder.TotalReturnValue = totalValue;
+
                 await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
                 await _unitOfWork.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -87,7 +94,6 @@ namespace Dragza.Infrastructure.Services
                 throw;
             }
         }
-
         public async Task<IEnumerable<ReturnOrderDto>> GetPharmacyReturnsAsync(Guid pharmacyId)
         {
             var returns = await _unitOfWork.ReturnOrderRepository.GetByPharmacyAsync(pharmacyId);
@@ -128,6 +134,7 @@ namespace Dragza.Infrastructure.Services
             UpdateStatusMetadata(returnOrder, dto.Status);
 
             await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
             return _mapper.Map<ReturnOrderDto>(returnOrder);
         }
 

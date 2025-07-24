@@ -12,7 +12,7 @@ namespace Dragza.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CouponsController : ControllerBase
     {
         private readonly ICouponService _couponService;

@@ -8,7 +8,7 @@ namespace Dragza.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+//[Authorize]
 public class ReturnReasonsController : ControllerBase
 {
     private readonly IReturnReasonService _service;

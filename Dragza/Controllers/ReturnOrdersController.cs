@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace Dragza.API.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("api/returns")]
     public class ReturnOrdersController : ControllerBase

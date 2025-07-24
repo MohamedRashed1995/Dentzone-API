@@ -5,6 +5,7 @@ using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dragza.API.Controllers
 {
@@ -62,17 +63,23 @@ namespace Dragza.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var ing = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(id);
-            if (ing == null)
+            var ing = await _unitOfWork.ActiveIngredientRepository.GetAllAsync(o => o.Id == id, include: q => q.Include(o => o.Products));
+            var activeIngredients = ing.FirstOrDefault();
+            if (activeIngredients == null)
             {
                 return NotFound();
             }
-            ing.IsDeleted = true; // Soft delete
-            _unitOfWork.ActiveIngredientRepository.Update(ing);
+            if (activeIngredients.Products.Count > 0)
+            {
+                throw new InvalidOperationException("Please Remove Active Ingredient Products");
+            }
+            activeIngredients.IsDeleted = true; // Soft delete
+            _unitOfWork.ActiveIngredientRepository.Update(activeIngredients);
             await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
             return NoContent();
         }
     }

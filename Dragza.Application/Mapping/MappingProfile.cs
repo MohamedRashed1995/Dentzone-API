@@ -59,8 +59,9 @@ namespace Dragza.Application.Mapping
 
             CreateMap<OrderItem, OrderItemDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
-                .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser.UserName))
+                //.ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser.UserName))
                 .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser == null ? string.Empty : src.ProductPrice.InventoryUser.UserName))
+                .ForMember(dest => dest.InventoryUserId, opt => opt.MapFrom(src => src.ProductPrice.InventoryUserId))
             .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.ProductPrice.PurchasePrice));
             CreateMap<OrderItemDto, OrderItem>();
 
@@ -81,7 +82,10 @@ namespace Dragza.Application.Mapping
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive ?? false))
                 .ForMember(dest => dest.IsPharmacy, opt => opt.MapFrom(src => src.IsPharmacy ?? false))
                 .ForMember(dest => dest.MinOrder, opt => opt.MapFrom(src => src.MinOrder ?? 0m))
-                .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region == null ? string.Empty : src.Region.RegionName));
+                .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.RegionId))
+                .ForMember(dest => dest.SubAreaId, opt => opt.MapFrom(src => src.SubAreaId))
+                .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region == null ? string.Empty : src.Region.RegionName))
+                .ForMember(dest => dest.SubAreaName, opt => opt.MapFrom(src => src.SubArea == null ? string.Empty : src.SubArea.Name));
 
             //  .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.MinOrder ?? 0m));
             CreateMap<Product, ProductResponseDto>()
@@ -120,6 +124,9 @@ namespace Dragza.Application.Mapping
             CreateMap<User, UserWithPharmacyDto>()
            .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.RegionId))
            .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region == null ? string.Empty : src.Region.RegionName))
+           .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.RegionId))
+           .ForMember(dest => dest.SubAreaId, opt => opt.MapFrom(src => src.SubAreaId))
+           .ForMember(dest => dest.SubAreaName, opt => opt.MapFrom(src => src.SubArea == null ? string.Empty : src.SubArea.Name))
            .ForMember(dest => dest.PharmacyDetails, opt => opt.MapFrom(src =>
                src.IsPharmacy == true
                ? src.PharmacyDetailUsers.FirstOrDefault()
