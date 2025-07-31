@@ -11,5 +11,7 @@ public partial class ActiveIngredient
 
     public bool? IsDeleted { get; set; }
 
+    public bool IsMeltable { get; set; }
+
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

@@ -23,5 +23,7 @@ namespace Dragza.Application.Interface
 		Task RemoveItem(RemoveItemDto removeItemDto);
         Task<Order> CompleteOrder(Guid orderId);
         Task<List<OrderDto>> GetAllorders();
+        Task<List<OrderDto>> GetRelatedOrdersAsync(string orderNumber);
+
     }
 }

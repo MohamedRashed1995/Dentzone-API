@@ -49,6 +49,8 @@ public partial class User
 
     public virtual ICollection<Order> OrderInventoryUsers { get; set; } = new List<Order>();
 
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
     public virtual ICollection<Order> OrderPharmacyUsers { get; set; } = new List<Order>();
 
     public virtual ICollection<PharmacyDetail> PharmacyDetailPurchasingManagerNavigations { get; set; } = new List<PharmacyDetail>();
@@ -62,6 +64,8 @@ public partial class User
     public virtual ICollection<ReturnOrder> ReturnOrderInventoryUsers { get; set; } = new List<ReturnOrder>();
 
     public virtual ICollection<ReturnOrder> ReturnOrderPharmacyUsers { get; set; } = new List<ReturnOrder>();
+
+    public virtual ICollection<ReturnedItem> ReturnedItems { get; set; } = new List<ReturnedItem>();
 
     public virtual Governate? SubArea { get; set; }
 

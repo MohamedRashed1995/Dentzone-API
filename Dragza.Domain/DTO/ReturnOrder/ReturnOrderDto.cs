@@ -16,6 +16,8 @@ namespace Dragza.Domain.DTO.ReturnOrder
         public DateTime RequestDate { get; set; }
         public ReturnOrderStatus Status { get; set; }
         public decimal TotalReturnValue { get; set; }
+        public string? ReturnOrderNumber { get; set; }
+
         public List<ReturnedItemDto> Items { get; set; } = new();
     }
 }

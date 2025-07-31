@@ -9,6 +9,7 @@ namespace Dragza.Domain.DTO.ReturnOrder
     public class CreateReturnOrderDto
     {
         public Guid OrderId { get; set; }
+
         public List<ReturnedItemDto> Items { get; set; } = new();
     }
 }

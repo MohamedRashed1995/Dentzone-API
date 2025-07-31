@@ -3,13 +3,9 @@ using Dragza.Application.Interface;
 using Dragza.Domain.DTO.Order;
 using Dragza.Domain.Enum;
 using Dragza.Domain.Models;
+using Dragza.Infrastructure.Helper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -22,7 +18,7 @@ namespace Dragza.Infrastructure.Services
         private readonly IInvoiceService _invoiceService;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper , IBalanceService balanceService, IInvoiceService invoiceService , ILogger<OrderService> logger)
+        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IBalanceService balanceService, IInvoiceService invoiceService, ILogger<OrderService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -30,123 +26,116 @@ namespace Dragza.Infrastructure.Services
             _invoiceService = invoiceService;
             _logger = logger;
         }
-        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto , Guid pharmacyUserId)
+        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto, Guid pharmacyUserId)
         {
             try
             {
 
-            _logger.LogInformation("CreateOrderAsync");
-            // Validate user is a pharmacy
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(pharmacyUserId);
-            if (user == null || user.IsPharmacy != true)
-            {
-                _logger.LogError("CreateOrderAsync :: Only pharmacy users can create orders");
-                throw new InvalidOperationException("Only pharmacy users can create orders");
-            }
+                _logger.LogInformation("CreateOrderAsync");
+                // Validate user is a pharmacy
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(pharmacyUserId);
+                if (user == null || user.IsPharmacy != true)
+                {
+                    _logger.LogError("CreateOrderAsync :: Only pharmacy users can create orders");
+                    throw new InvalidOperationException("Only pharmacy users can create orders");
+                }
 
                 // Calculate total amount
-                //decimal totalAmount = orderDto.Items.Sum(item => item.Quantity * item.UnitPrice);
-                decimal totalAmount = orderDto.TotalAmount;
-			// Apply coupon discount if any
-			if (orderDto.CouponId.HasValue)
-            {
-                var coupon = await _unitOfWork.CouponRepository.GetByIdAsync(orderDto.CouponId.Value);
-                if (coupon != null && coupon.IsActive == true)
+                decimal totalAmount = orderDto.Items.Sum(item => item.Quantity * item.UnitPrice);
+
+                // Apply coupon discount if any
+                if (orderDto.CouponId.HasValue)
                 {
-                    totalAmount -= coupon.DiscountValue;
-                }
-            }
-
-            // Handle payment based on payment method
-            decimal cashAmount = 0;
-            decimal creditAmount = 0;
-            Guid? creditAccountId = null;
-
-            switch (orderDto.PaymentMethod)
-            {
-                case PaymentMethod.Cash:
-                    cashAmount = totalAmount;
-                    break;
-
-                case PaymentMethod.Credit:
-                    creditAmount = totalAmount;
-                    var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
-                    //if (!await _balanceService.HasSufficientBalance(creditAccount.Id, -creditAmount))
-                    //{
-                    //    throw new InvalidOperationException("Insufficient credit balance");
-                    //}
-                    creditAccountId = creditAccount.Id;
-                    break;
-
-                case PaymentMethod.Mixed:
-                    if (!orderDto.CreditAmount.HasValue)
+                    var coupon = await _unitOfWork.CouponRepository.GetByIdAsync(orderDto.CouponId.Value);
+                    if (coupon != null && coupon.IsActive == true)
                     {
-                        throw new InvalidOperationException("Credit amount is required for mixed payment");
+                        totalAmount -= coupon.DiscountValue;
                     }
-                    creditAmount = orderDto.CreditAmount.Value;
-                    cashAmount = totalAmount - creditAmount;
+                }
 
-                    var userCreditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
-                    //if (!await _balanceService.HasSufficientBalance(userCreditAccount.Id, -creditAmount))
-                    //{
-                    //    throw new InvalidOperationException("Insufficient credit balance");
-                    //}
-                    creditAccountId = userCreditAccount.Id;
-                    break;
-            }
+                // Handle payment based on payment method
+                decimal cashAmount = 0;
+                decimal creditAmount = 0;
+                Guid? creditAccountId = null;
 
-            // Create order
-            var order = new Order
-            {
-                Id = Guid.NewGuid(),
-                PharmacyUserId = pharmacyUserId,
-                InventoryUserId = orderDto.Items.FirstOrDefault().InventoryUserId,
-                OrderDate = DateTime.UtcNow,
-                Status = (int)OrderStatus.Pending,
-                TotalAmount = totalAmount,
-                CreditUsed = creditAmount,
-                CashPaid = cashAmount,
-                CreditAccountId = creditAccountId,
-            };
+                switch (orderDto.PaymentMethod)
+                {
+                    case PaymentMethod.Cash:
+                        cashAmount = totalAmount;
+                        break;
 
-            // Add order items
-            foreach (var itemDto in orderDto.Items)
-            {
-					var productExists = await _unitOfWork.ProductRepository.GetProductWithDetailsAsync(itemDto.ProductId);
-					if (productExists==null)
-					{
-						throw new InvalidOperationException($"Product with ID {itemDto.ProductId} does not exist.");
-					}
+                    case PaymentMethod.Credit:
+                        creditAmount = totalAmount;
+                        var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                        //if (!await _balanceService.HasSufficientBalance(creditAccount.Id, -creditAmount))
+                        //{
+                        //    throw new InvalidOperationException("Insufficient credit balance");
+                        //}
+                        creditAccountId = creditAccount.Id;
+                        break;
 
-					var orderItem = new OrderItem
-					{
-						ProductId = itemDto.ProductId,
-						Quantity = itemDto.Quantity,
-						Id = Guid.NewGuid(),
-						Amount = itemDto.Quantity,
-						ProductPriceId = itemDto.ProductPriceId
-					};
-					order.OrderItems.Add(orderItem);
-				}
+                    case PaymentMethod.Mixed:
+                        if (!orderDto.CreditAmount.HasValue)
+                        {
+                            throw new InvalidOperationException("Credit amount is required for mixed payment");
+                        }
+                        creditAmount = orderDto.CreditAmount.Value;
+                        cashAmount = totalAmount - creditAmount;
 
-            await _unitOfWork.OrderRepository.AddAsync(order);
-            await _unitOfWork.CommitAsync();
-            //await _unitOfWork.SaveChangesAsync();
+                        var userCreditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                        //if (!await _balanceService.HasSufficientBalance(userCreditAccount.Id, -creditAmount))
+                        //{
+                        //    throw new InvalidOperationException("Insufficient credit balance");
+                        //}
+                        creditAccountId = userCreditAccount.Id;
+                        break;
+                }
+                long uniqueNum = UniqueNumberGenerator.GenerateUniqueNumber();
 
+                // Create order
+                var order = new Order
+                {
+                    Id = Guid.NewGuid(),
+                    PharmacyUserId = pharmacyUserId,
+                    OrderDate = DateTime.UtcNow,
+                    Status = (int)OrderStatus.Pending,
+                    TotalAmount = totalAmount,
+                    CreditUsed = creditAmount,
+                    CashPaid = cashAmount,
+                    CreditAccountId = creditAccountId,
+                    OrderNumber = uniqueNum.ToString(),
+                };
 
-            // Process payments
-            if (creditAmount > 0)
-            {
-                await _balanceService.CreateTransaction(
-                    creditAccountId.Value,
-                    -creditAmount,
-                    pharmacyUserId,
-                    TransactionType.Payment,
-                    $"Order payment #{order.Id}",
-                    order.Id);
-            }
+                // Add order items
+                foreach (var itemDto in orderDto.Items)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        ProductId = itemDto.ProductId,
+                        Quantity = itemDto.Quantity,
+                        Id = Guid.NewGuid(),
+                        Amount = itemDto.Quantity,
+                        ProductPriceId = itemDto.ProductPriceId
+                    };
+                    order.OrderItems.Add(orderItem);
+                }
 
-            return _mapper.Map<OrderDto>(order);
+                await _unitOfWork.OrderRepository.AddAsync(order);
+                await _unitOfWork.CommitAsync();
+
+                // Process payments
+                if (creditAmount > 0)
+                {
+                    await _balanceService.CreateTransaction(
+                        creditAccountId.Value,
+                        -creditAmount,
+                        pharmacyUserId,
+                        TransactionType.Payment,
+                        $"Order payment #{order.Id}",
+                        order.Id);
+                }
+              await CreateOrdersByInventoryAsync(orderDto, pharmacyUserId , uniqueNum);
+                return _mapper.Map<OrderDto>(order);
 
             }
             catch (Exception ex)
@@ -250,13 +239,14 @@ namespace Dragza.Infrastructure.Services
         public async Task<List<OrderDto>> GetAllorders()
         {
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
+                                x => x.InventoryUserId == null,
                                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .ThenInclude(oi => oi.ProductPrices)
                               .ThenInclude(oi => oi.InventoryUser)
                               .Include(o => o.InventoryUser)
                               .Include(o => o.PharmacyUser)
-                              //.ThenInclude(oi => oi.ProductPrice)
+            //.ThenInclude(oi => oi.ProductPrice)
             );
             return _mapper.Map<List<OrderDto>>(orders);
         }
@@ -444,8 +434,246 @@ namespace Dragza.Infrastructure.Services
             return order;
         }
 
-	
+        private async Task<List<OrderDto>> CreateOrdersByInventoryAsync(CreateOrderDto orderDto, Guid pharmacyUserId , long uniqueNum)
+        {
+            try
+            {
+                // Validate user
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(pharmacyUserId);
+                if (user == null || user.IsPharmacy != true)
+                    throw new InvalidOperationException("Only pharmacy users can create orders");
 
-		// Implement other methods...
-	}
+                // Get product prices to determine inventory
+                var productPriceIds = orderDto.Items.Select(i => i.ProductPriceId).Distinct().ToList();
+                var productPrices = await _unitOfWork.ProductPriceRepository.GetAllAsync(o => productPriceIds.Any(x => x == o.Id));
+
+                // Create dictionary for lookup (handle nullable InventoryUserId)
+                var priceToInventoryDict = productPrices.ToDictionary(
+                    pp => pp.Id,
+                    pp => (Guid?)pp.InventoryUserId  // Cast to Guid? to handle nulls
+                );
+
+                // Validate all product prices exist
+                var missingIds = orderDto.Items
+                    .Select(i => i.ProductPriceId)
+                    .Except(productPrices.Select(pp => pp.Id))
+                    .ToList();
+
+                if (missingIds.Any())
+                    throw new KeyNotFoundException($"Missing product prices for IDs: {string.Join(", ", missingIds)}");
+
+                // Group items by inventory
+                var groupedItems = orderDto.Items
+                    .GroupBy(item => priceToInventoryDict.GetValueOrDefault(item.ProductPriceId))
+                    .ToList();
+
+                // Validate coupon usage
+                if (orderDto.CouponId.HasValue && groupedItems.Count > 1)
+                    throw new InvalidOperationException("Coupons cannot be applied to orders spanning multiple inventories");
+
+                decimal originalTotal = orderDto.Items.Sum(i => i.Quantity * i.UnitPrice);
+                decimal entireTotalAfterCoupon = originalTotal;
+                Coupon coupon = null;
+
+                // Apply coupon if exists
+                if (orderDto.CouponId.HasValue)
+                {
+                    coupon = await _unitOfWork.CouponRepository.GetByIdAsync(orderDto.CouponId.Value);
+                    if (coupon != null && coupon.IsActive != false)
+                        entireTotalAfterCoupon -= coupon.DiscountValue;
+                }
+
+                // Calculate payment distribution
+                (decimal entireCredit, decimal entireCash) = CalculatePaymentDistribution(
+                    orderDto.PaymentMethod,
+                    entireTotalAfterCoupon,
+                    orderDto.CreditAmount
+                );
+
+                // Validate credit balance
+                if (entireCredit > 0)
+                {
+                    var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                    if (!await _balanceService.HasSufficientBalance(creditAccount.Id, -entireCredit))
+                        throw new InvalidOperationException("Insufficient credit balance");
+                }
+
+                var orders = new List<OrderDto>();
+                decimal totalAssignedGroupTotalAfterCoupon = 0;
+                decimal totalAssignedCredit = 0;
+                int groupCount = groupedItems.Count;
+
+                using (var transaction = await _unitOfWork.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        for (int i = 0; i < groupCount; i++)
+                        {
+                            var group = groupedItems[i];
+                            var inventoryId = group.Key;
+                            var items = group.ToList();
+                            decimal groupTotalOriginal = items.Sum(i => i.Quantity * i.UnitPrice);
+                            decimal ratio = groupTotalOriginal / originalTotal;
+
+                            // Calculate group's total after coupon (proportional discount)
+                            decimal groupTotalAfterCoupon;
+                            if (i == groupCount - 1)
+                            {
+                                groupTotalAfterCoupon = entireTotalAfterCoupon - totalAssignedGroupTotalAfterCoupon;
+                            }
+                            else
+                            {
+                                groupTotalAfterCoupon = Math.Round(entireTotalAfterCoupon * ratio, 2);
+                            }
+                            totalAssignedGroupTotalAfterCoupon += groupTotalAfterCoupon;
+
+                            // Calculate group's credit portion
+                            decimal groupCredit;
+                            if (i == groupCount - 1)
+                            {
+                                groupCredit = entireCredit - totalAssignedCredit;
+                            }
+                            else
+                            {
+                                groupCredit = Math.Round(entireCredit * ratio, 2);
+                            }
+                            totalAssignedCredit += groupCredit;
+
+                            // Calculate group's cash portion
+                            decimal groupCash = groupTotalAfterCoupon - groupCredit;
+
+                            // Create order for this inventory group
+                            var order = await CreateInventoryOrder(
+                                orderDto,
+                                pharmacyUserId,
+                                inventoryId,
+                                items,
+                                groupTotalAfterCoupon,
+                                groupCredit,
+                                groupCash,
+                                uniqueNum,
+                                coupon
+                            );
+
+                            orders.Add(order);
+                        }
+
+                        await _unitOfWork.CommitAsync();
+                        await transaction.CommitAsync();
+                        return orders;
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("CreateOrdersByInventoryAsync error: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        private (decimal Credit, decimal Cash) CalculatePaymentDistribution(
+            PaymentMethod method,
+            decimal totalAfterCoupon,
+            decimal? creditAmount)
+        {
+            return method switch
+            {
+                PaymentMethod.Cash => (0, totalAfterCoupon),
+                PaymentMethod.Credit => (totalAfterCoupon, 0),
+                PaymentMethod.Mixed => (
+                    creditAmount ?? throw new InvalidOperationException("Credit amount required"),
+                    totalAfterCoupon - creditAmount.Value
+                ),
+                _ => throw new InvalidOperationException("Invalid payment method")
+            };
+        }
+
+        private async Task<OrderDto> CreateInventoryOrder(
+            CreateOrderDto orderDto,
+            Guid pharmacyUserId,
+            Guid? inventoryId,
+            List<OrderItemDto> items,
+            decimal groupTotalAfterCoupon,
+            decimal groupCredit,
+            decimal groupCash,
+            long uniqueNum,
+            Coupon coupon)
+        {
+            // Determine credit account if needed
+            Guid? creditAccountId = null;
+            if (groupCredit > 0)
+            {
+                var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                creditAccountId = creditAccount?.Id;
+            }
+
+            // Generate unique order number
+            //long uniqueNum = UniqueNumberGenerator.GenerateUniqueNumber();
+
+            // Create order
+            var order = new Order
+            {
+                Id = Guid.NewGuid(),
+                PharmacyUserId = pharmacyUserId,
+                InventoryUserId = inventoryId,
+                OrderDate = DateTime.UtcNow,
+                Status = (int)OrderStatus.Pending,
+                TotalAmount = groupTotalAfterCoupon,
+                CreditUsed = groupCredit,
+                CashPaid = groupCash,
+                CreditAccountId = creditAccountId,
+                OrderNumber = uniqueNum.ToString(),
+                CouponId = coupon?.Id
+            };
+
+            // Add items
+            foreach (var item in items)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Amount = item.Quantity,
+                    ProductPriceId = item.ProductPriceId
+                });
+            }
+
+            await _unitOfWork.OrderRepository.AddAsync(order);
+
+            // Process credit transaction if needed
+            //if (groupCredit > 0 && creditAccountId.HasValue)
+            //{
+            //    await _balanceService.CreateTransaction(
+            //        creditAccountId.Value,
+            //        -groupCredit,
+            //        pharmacyUserId,
+            //        TransactionType.Payment,
+            //        $"Order payment #{order.Id}",
+            //        order.Id
+            //    );
+            //}
+
+            return _mapper.Map<OrderDto>(order);
+        }
+
+        public async Task<List<OrderDto>> GetRelatedOrdersAsync(string orderNumber)
+        {
+            var orders = await _unitOfWork.OrderRepository.GetAllAsync(
+                            o => o.OrderNumber == orderNumber,
+                            include: q => q.Include(o => o.OrderItems)
+                                          .ThenInclude(oi => oi.Product)
+                                          .Include(u => u.InventoryUser)
+                                          .Include(u => u.PharmacyUser)
+                                          .Include(o => o.OrderItems)
+                                          .ThenInclude(oi => oi.ProductPrice)
+                        );
+            return _mapper.Map<List<OrderDto>>(orders);
+        }
+    }
 }

@@ -34,7 +34,7 @@ namespace Dragaza.Infrastructure.Repositories
         public async Task<IEnumerable<ReturnOrder>> GetByPharmacyAsync(Guid pharmacyId)
         {
             return await _context.ReturnOrders
-                .Where(ro => ro.PharmacyUserId == pharmacyId)
+                .Where(ro => ro.PharmacyUserId == pharmacyId && ro.InventoryUserId == null)
                 .Include(ro => ro.ReturnedItems)
                 .ToListAsync();
         }
@@ -61,7 +61,8 @@ namespace Dragaza.Infrastructure.Repositories
                     .ThenInclude(ri => ri.Reason)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.ProductPrice)
-				.AsNoTracking()
+                .Where(x => x.InventoryUserId == null || x.InventoryUserId == Guid.Empty)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

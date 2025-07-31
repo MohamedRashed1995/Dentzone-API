@@ -364,6 +364,7 @@ public partial class DragzaContext : DbContext
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DeliverDate).HasColumnType("datetime");
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.OrderNumber).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.CreditAccount).WithMany(p => p.Orders)
@@ -386,6 +387,10 @@ public partial class DragzaContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Inventory).WithMany(p => p.OrderItems)
+                .HasForeignKey(d => d.InventoryId)
+                .HasConstraintName("FK_OrderItem_User");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.OrderId)
@@ -507,11 +512,11 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ApprovalDate).HasColumnType("datetime");
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
+            entity.Property(e => e.ReturnOrderNumber).HasMaxLength(50);
             entity.Property(e => e.TotalReturnValue).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.InventoryUser).WithMany(p => p.ReturnOrderInventoryUsers)
                 .HasForeignKey(d => d.InventoryUserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ReturnOrder_User1");
 
             entity.HasOne(d => d.Order).WithMany(p => p.ReturnOrders)
@@ -539,6 +544,10 @@ public partial class DragzaContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Inventory).WithMany(p => p.ReturnedItems)
+                .HasForeignKey(d => d.InventoryId)
+                .HasConstraintName("FK_ReturnedItem_User");
 
             entity.HasOne(d => d.Order).WithMany(p => p.ReturnedItems)
                 .HasForeignKey(d => d.OrderId)

@@ -18,5 +18,8 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ReturnReasonDto>> GetReturnReasonsAsync();
         Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync();
         Task<ReturnOrderDto?> GetReturnOrderByIdAsync(Guid id);
+
+        Task<IEnumerable<ReturnOrderDto>> GetRelatedReturns(string returnNumber);
+
     }
 }

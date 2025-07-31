@@ -21,6 +21,8 @@ namespace Dragza.Domain.DTO.Order
         public DateTime? DeliverDate { get; set; }
         public string PharmacyName { get; set; }
         public string InventoryName { get; set; }
+        public string? OrderNumber { get; set; }
+
         public List<OrderItemDto> Items { get; set; } = new();
     }
 }

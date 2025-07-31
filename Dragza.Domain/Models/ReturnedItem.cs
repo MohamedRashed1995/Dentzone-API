@@ -23,6 +23,12 @@ public partial class ReturnedItem
 
     public decimal TotalAmount { get; set; }
 
+    public int Status { get; set; }
+
+    public Guid? InventoryId { get; set; }
+
+    public virtual User? Inventory { get; set; }
+
     public virtual Order Order { get; set; } = null!;
 
     public virtual Product Product { get; set; } = null!;
