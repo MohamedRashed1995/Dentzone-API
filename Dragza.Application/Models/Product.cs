@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Dragza.Domain.Models;
+namespace Dragza.Application.Models;
 
 public partial class Product
 {
@@ -30,20 +30,10 @@ public partial class Product
     public string? Image { get; set; }
 
     public string? ArabicName { get; set; }
-	//public decimal? PurchasePrice { get; set; }
-	//public decimal? SalesPrice { get; set; }
-
-	public virtual ActiveIngredient? ActiveIngerdient { get; set; }
 
     public virtual ICollection<BestSellerProduct> BestSellerProducts { get; set; } = new List<BestSellerProduct>();
 
-    public virtual Category Category { get; set; } = null!;
-
-    public virtual MainCategory? MainCategory { get; set; }
-	//public Guid? InventoryUserId { get; set; }
-	//public virtual User? InventoryUser { get; set; }
-
-	public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
 

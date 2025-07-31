@@ -72,11 +72,12 @@ namespace Dragza.API.Controllers
             {
                 return NotFound();
             }
-            if (activeIngredients.Products.Count > 0)
-            {
-                throw new InvalidOperationException("Please Remove Active Ingredient Products");
-            }
-            activeIngredients.IsDeleted = true; // Soft delete
+            //if (activeIngredients.Products.Count > 0)
+            //{
+            //    throw new InvalidOperationException("Please Remove Active Ingredient Products");
+            //}
+			activeIngredients.IsDeleted = !(activeIngredients.IsDeleted ?? false);
+			//activeIngredients.IsDeleted = true; // Soft delete
             _unitOfWork.ActiveIngredientRepository.Update(activeIngredients);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();

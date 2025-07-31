@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using Dragza.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Dragza.Application.Data;
+namespace Dragza.Application.Models;
 
-public partial class DragzaContext : DbContext
+public partial class Db18536Context : DbContext
 {
-    public DragzaContext()
+    public Db18536Context()
     {
     }
 
-    public DragzaContext(DbContextOptions<DragzaContext> options)
+    public Db18536Context(DbContextOptions<Db18536Context> options)
         : base(options)
     {
     }
@@ -69,6 +68,10 @@ public partial class DragzaContext : DbContext
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=db18536.public.databaseasp.net; Database=db18536; User Id=db18536; Password=Bj8=_Gx65w!Z; Encrypt=False; MultipleActiveResultSets=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -441,21 +444,7 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.Preef).HasMaxLength(100);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-
-            entity.HasOne(d => d.ActiveIngerdient).WithMany(p => p.Products)
-                .HasForeignKey(d => d.ActiveIngerdientId)
-                .HasConstraintName("FK_Product_ActiveIngredient");
-
-            entity.HasOne(d => d.Category).WithMany(p => p.Products)
-                .HasForeignKey(d => d.CategoryId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Product_Category");
-
-            entity.HasOne(d => d.MainCategory).WithMany(p => p.Products)
-                .HasForeignKey(d => d.MainCategoryId)
-                .HasConstraintName("FK_Product_MainCategory");
-		
-		});
+        });
 
         modelBuilder.Entity<ProductPrice>(entity =>
         {
@@ -464,8 +453,8 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreationDate).HasColumnType("datetime");
             entity.Property(e => e.DeletedDate).HasColumnType("datetime");
-            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Category).WithMany(p => p.ProductPrices)

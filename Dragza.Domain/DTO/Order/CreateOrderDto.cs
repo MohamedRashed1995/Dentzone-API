@@ -10,7 +10,7 @@ namespace Dragza.Domain.DTO.Order
     public class CreateOrderDto
     {
         public Guid? CouponId { get; set; }
-
+        public decimal TotalAmount { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
         public PaymentMethod PaymentMethod { get; set; } // "Cash", "Credit", or "Mixed"
         public decimal? CreditAmount { get; set; }

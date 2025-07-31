@@ -92,5 +92,30 @@ namespace Dragza.Infrastructure.Services
                 .OrderByDescending(pp => pp.CreationDate)
                 .FirstOrDefaultAsync();
         }
-    }
+		public async Task<IEnumerable<ProductPrice>> GetAllProductPricesWithDetailsAsync(bool includeDeleted, string search)
+		{
+			var query = _context.ProductPrices
+				.Include(pp => pp.Product)
+					.ThenInclude(p => p.Category)
+				.Include(pp => pp.Product)
+					.ThenInclude(p => p.ActiveIngerdient)
+				.Include(pp => pp.Category)
+				.Include(pp => pp.InventoryUser)
+				.Include(pp => pp.MainCategory)
+				.Where(pp => includeDeleted || pp.IsDeleted != true);
+
+			if (!string.IsNullOrEmpty(search))
+			{
+				query = query.Where(pp =>
+					pp.Product.Name.Contains(search) ||
+					pp.Product.ArabicName.Contains(search) ||
+					pp.Product.Description.Contains(search));
+			}
+
+			return await query
+				.OrderBy(pp => pp.Product.Name)
+				.ThenByDescending(pp => pp.CreationDate)
+				.ToListAsync();
+		}
+	}
 }

@@ -24,77 +24,198 @@ namespace Dragza.Infrastructure.Services
             _mapper = mapper;
         }
 
-        public async Task<ReturnOrderDto> CreateReturnAsync(CreateReturnOrderDto dto, Guid pharmacyUserId)
-        {
-            using var transaction = await _unitOfWork.BeginTransactionAsync();
+		//    public async Task<ReturnOrderDto> CreateReturnAsync(CreateReturnOrderDto dto, Guid pharmacyUserId)
+		//    {
+		//        using var transaction = await _unitOfWork.BeginTransactionAsync();
 
-            try
-            {
-                var order = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(dto.OrderId);
-                if (order == null) throw new KeyNotFoundException("Order not found");
+		//        try
+		//        {
+		//            var order = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(dto.OrderId);
+		//            if (order == null) throw new KeyNotFoundException("Order not found");
 
-                //// Validate user exists
-                //var userExists = await _unitOfWork.UserRepository.ExistsAsync(order.PharmacyUserId);
-                //if (!userExists) throw new KeyNotFoundException("User not found");
+		//            //// Validate user exists
+		//            //var userExists = await _unitOfWork.UserRepository.ExistsAsync(order.PharmacyUserId);
+		//            //if (!userExists) throw new KeyNotFoundException("User not found");
 
-                var returnOrder = new ReturnOrder
-                {
-                    Id = Guid.NewGuid(),
-                    OrderId = dto.OrderId,
-                    PharmacyUserId = order.PharmacyUserId,
-                    RequestDate = DateTime.UtcNow,
-                    Statuse = (int)ReturnOrderStatus.Requested,
-                    InventoryUserId = order.OrderItems.First().ProductPrice.InventoryUserId, // CRITICAL FIX: Add missing InventoryUserId
-                    AdminApproval = false,
-                    ReturnedItems = new List<ReturnedItem>()
-                };
+		//            var returnOrder = new ReturnOrder
+		//            {
+		//                Id = Guid.NewGuid(),
+		//                OrderId = dto.OrderId,
+		//                PharmacyUserId = order.PharmacyUserId,
+		//                RequestDate = DateTime.UtcNow,
+		//                Statuse = (int)ReturnOrderStatus.Requested,
+		//                InventoryUserId = order.OrderItems.First().ProductPrice.InventoryUserId, // CRITICAL FIX: Add missing InventoryUserId
+		//                AdminApproval = false,
+		//                ReturnedItems = new List<ReturnedItem>()
+		//            };
 
-                decimal totalValue = 0;
+		//            decimal totalValue = 0;
 
-                foreach (var item in dto.Items)
-                {
-                    var orderItem = order.OrderItems.FirstOrDefault(oi =>
-                        oi.ProductId == item.ProductId &&
-                        oi.ProductPriceId == item.ProductPriceId);
+		//            foreach (var item in dto.Items)
+		//            {
+		//                var orderItem = order.OrderItems.FirstOrDefault(oi =>
+		//                    oi.ProductId == item.ProductId &&
+		//                    oi.ProductPriceId == item.ProductPriceId);
 
-                    if (orderItem == null || item.QuantityReturned > orderItem.Quantity)
-                        throw new InvalidOperationException("Invalid return quantity");
+		//                if (orderItem == null || item.QuantityReturned > orderItem.Quantity)
+		//                    throw new InvalidOperationException("Invalid return quantity");
 
-                    var reason = await _unitOfWork.ReturnReasonRepository.GetByIdAsync(item.ReasonId);
-                    if (reason == null) throw new KeyNotFoundException("Invalid return reason");
+		//                var reason = await _unitOfWork.ReturnReasonRepository.GetByIdAsync(item.ReasonId);
+		//                if (reason == null) throw new KeyNotFoundException("Invalid return reason");
 
-                    var returnedItem = new ReturnedItem
-                    {
-                        Id = Guid.NewGuid(),
-                        ProductId = item.ProductId,
-                        ProductPriceId = item.ProductPriceId,
-                        QuantityReturned = item.QuantityReturned,
-                        ReasonId = item.ReasonId,
-                        OtherReason = item.OtherReason,
-                        TotalAmount = item.QuantityReturned * orderItem.Amount / orderItem.Quantity,
-                        ReturnOrderId = returnOrder.Id,
-                        OrderId = order.Id // CRITICAL FIX: Add missing OrderId
-                    };
+		//                var returnedItem = new ReturnedItem
+		//                {
+		//                    Id = Guid.NewGuid(),
+		//                    ProductId = item.ProductId,
+		//                    ProductPriceId = item.ProductPriceId,
+		//                    QuantityReturned = item.QuantityReturned,
+		//                    ReasonId = item.ReasonId,
+		//                    OtherReason = item.OtherReason,
+		//                    TotalAmount = item.QuantityReturned * orderItem.Amount / orderItem.Quantity,
+		//                    ReturnOrderId = returnOrder.Id,
+		//                    OrderId = order.Id // CRITICAL FIX: Add missing OrderId
+		//                };
 
-                    totalValue += returnedItem.TotalAmount;
-                    returnOrder.ReturnedItems.Add(returnedItem);
-                }
+		//                totalValue += returnedItem.TotalAmount;
+		//                returnOrder.ReturnedItems.Add(returnedItem);
+		//            }
 
-                returnOrder.TotalReturnValue = totalValue;
+		//            returnOrder.TotalReturnValue = totalValue;
 
-                await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
-                await _unitOfWork.SaveChangesAsync();
-                await transaction.CommitAsync();
+		//            await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
+		//            await _unitOfWork.SaveChangesAsync();
+		//            await transaction.CommitAsync();
+		//var returnOrderDto = _mapper.Map<ReturnOrderDto>(returnOrder);
 
-                return _mapper.Map<ReturnOrderDto>(returnOrder);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-        public async Task<IEnumerable<ReturnOrderDto>> GetPharmacyReturnsAsync(Guid pharmacyId)
+		//            //// Manually set InventoryName for each item in the foreach loop
+		//            foreach (var itemDto in returnOrderDto.Items)
+		//            {
+		//                itemDto.InventoryName = order.PharmacyUser?.BussinesName ?? string.Empty;
+		//            }
+		//            return returnOrderDto;
+		//        }
+		//        catch
+		//        {
+		//            await transaction.RollbackAsync();
+		//            throw;
+		//        }
+		//    }
+
+		public async Task<ReturnOrderDto> CreateReturnAsync(CreateReturnOrderDto dto, Guid pharmacyUserId)
+		{
+			using var transaction = await _unitOfWork.BeginTransactionAsync();
+			try
+			{
+				var order = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(dto.OrderId);
+				if (order == null) throw new KeyNotFoundException("Order not found");
+
+				var returnOrder = new ReturnOrder
+				{
+					Id = Guid.NewGuid(),
+					OrderId = dto.OrderId,
+					PharmacyUserId = order.PharmacyUserId,
+					RequestDate = DateTime.UtcNow,
+					Statuse = (int)ReturnOrderStatus.Requested,
+					InventoryUserId = order.OrderItems.First().ProductPrice.InventoryUserId,
+					AdminApproval = false,
+					ReturnedItems = new List<ReturnedItem>()
+				};
+
+				decimal totalValue = 0;
+				var orderItemsToUpdate = new List<OrderItem>();
+				var orderItemsToDelete = new List<OrderItem>(); // Track items to delete
+
+				foreach (var item in dto.Items)
+				{
+					var orderItem = order.OrderItems.FirstOrDefault(oi =>
+						oi.ProductId == item.ProductId &&
+						oi.ProductPriceId == item.ProductPriceId);
+
+					if (orderItem == null || item.QuantityReturned > orderItem.Quantity)
+						throw new InvalidOperationException("Invalid return quantity");
+
+					var reason = await _unitOfWork.ReturnReasonRepository.GetByIdAsync(item.ReasonId);
+					if (reason == null) throw new KeyNotFoundException("Invalid return reason");
+
+					decimal unitPrice = orderItem.Amount / orderItem.Quantity;
+					decimal returnAmount = item.QuantityReturned * unitPrice;
+
+					var returnedItem = new ReturnedItem
+					{
+						Id = Guid.NewGuid(),
+						ProductId = item.ProductId,
+						ProductPriceId = item.ProductPriceId,
+						QuantityReturned = item.QuantityReturned,
+						ReasonId = item.ReasonId,
+						OtherReason = item.OtherReason,
+						TotalAmount = returnAmount,
+						ReturnOrderId = returnOrder.Id,
+						OrderId = order.Id
+					};
+
+					totalValue += returnedItem.TotalAmount;
+					returnOrder.ReturnedItems.Add(returnedItem);
+
+					// Update the order item quantities and amounts
+					orderItem.Quantity -= item.QuantityReturned;
+					orderItem.Amount -= returnAmount;
+
+					if (orderItem.Quantity <= 0)
+					{
+						// Mark for deletion instead of removing from collection
+						orderItemsToDelete.Add(orderItem);
+					}
+					else
+					{
+						// Mark for update if quantity > 0
+						orderItemsToUpdate.Add(orderItem);
+					}
+				}
+
+				returnOrder.TotalReturnValue = totalValue;
+
+				// Update order items that still have quantity > 0
+				foreach (var orderItem in orderItemsToUpdate)
+				{
+					_unitOfWork.OrderItemRepository.Update(orderItem);
+				}
+
+				// Delete order items that have quantity <= 0
+				foreach (var orderItem in orderItemsToDelete)
+				{
+					_unitOfWork.OrderItemRepository.Delete(orderItem);
+				}
+
+				// Recalculate order total (exclude items that will be deleted)
+				var remainingItems = order.OrderItems.Except(orderItemsToDelete).Where(oi => oi.Quantity > 0);
+				order.TotalAmount = remainingItems.Sum(oi => oi.Amount);
+
+				// Update the order
+				_unitOfWork.OrderRepository.Update(order);
+
+				// Add the return order
+				await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
+
+				await _unitOfWork.SaveChangesAsync();
+				await transaction.CommitAsync();
+
+				var returnOrderDto = _mapper.Map<ReturnOrderDto>(returnOrder);
+
+				// Manually set InventoryName for each item
+				foreach (var itemDto in returnOrderDto.Items)
+				{
+					itemDto.InventoryName = order.PharmacyUser?.BussinesName ?? string.Empty;
+				}
+
+				return returnOrderDto;
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
+		}
+		public async Task<IEnumerable<ReturnOrderDto>> GetPharmacyReturnsAsync(Guid pharmacyId)
         {
             var returns = await _unitOfWork.ReturnOrderRepository.GetByPharmacyAsync(pharmacyId);
             return _mapper.Map<IEnumerable<ReturnOrderDto>>(returns);
@@ -138,13 +259,29 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<ReturnOrderDto>(returnOrder);
         }
 
-        public async Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync()
-        {
-            var returnOrders = await _unitOfWork.ReturnOrderRepository.GetAllWithDetailsAsync();
-            return _mapper.Map<IEnumerable<ReturnOrderDto>>(returnOrders);
-        }
+        //public async Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync()
+        //{
+        //    var returnOrders = await _unitOfWork.ReturnOrderRepository.GetAllWithDetailsAsync();
+        //    return _mapper.Map<IEnumerable<ReturnOrderDto>>(returnOrders);
+        //}
+		public async Task<IEnumerable<ReturnOrderDto>> GetAllReturnOrdersAsync()
+		{
+			var returnOrders = await _unitOfWork.ReturnOrderRepository.GetAllWithDetailsAsync();
+			var dtos = _mapper.Map<IEnumerable<ReturnOrderDto>>(returnOrders).ToList();
 
-        public async Task<ReturnOrderDto?> GetReturnOrderByIdAsync(Guid id)
+			// Set InventoryName manually for each item
+			foreach (var dto in dtos)
+			{
+				var returnOrder = returnOrders.First(ro => ro.Id == dto.Id);
+				foreach (var item in dto.Items)
+				{
+					item.InventoryName = returnOrder.InventoryUser?.BussinesName ?? string.Empty;
+				}
+			}
+
+			return dtos;
+		}
+		public async Task<ReturnOrderDto?> GetReturnOrderByIdAsync(Guid id)
         {
             var returnOrder = await _unitOfWork.ReturnOrderRepository.GetByIdWithDetailsAsync(id);
             return _mapper.Map<ReturnOrderDto>(returnOrder);

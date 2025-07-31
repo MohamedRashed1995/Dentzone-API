@@ -53,18 +53,35 @@ namespace Dragza.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllProducts([FromQuery] int lang,[FromQuery] bool includeDeleted = false, [FromQuery] string search = null)
         {
-            var products = await _productService.GetAllProductsAsync(includeDeleted, search);
-            if (lang == 0) // Assuming 0 is for Arabic
-            {
-                foreach (var product in products)
-                {
-                    product.Name = product.ArabicName ; // Simulating language change for demonstration
-                }
-            }
-            return Ok(products);
-        }
+			var products = await _productService.GetAllProductsAsync(includeDeleted, search);
+			if (lang == 0) // Assuming 0 is for Arabic
+			{
+			    foreach (var product in products)
+			    {
+			        product.Name = product.ArabicName ; // Simulating language change for demonstration
+			    }
+			}
+			return Ok(products);
 
-        [HttpPut("{id}")]
+			
+		}
+
+		[HttpGet("product-prices-with-data")]
+		public async Task<IActionResult> GetAllProductPricesWithProductData([FromQuery] int lang, [FromQuery] bool includeDeleted = false, [FromQuery] string search = null)
+		{
+
+			var productPrices = await _productPriceService.GetAllProductPricesAsync(includeDeleted, search);
+			if (lang == 0) // Assuming 0 is for Arabic
+			{
+				foreach (var product in productPrices)
+				{
+					product.ProductName = product.ProductArabicName; // Simulating language change for demonstration
+				}
+			}
+			return Ok(productPrices);
+		}
+
+		[HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateProduct(Guid id, [FromForm] UpdateProductDto dto)
         {
@@ -144,7 +161,7 @@ namespace Dragza.API.Controllers
             worksheet.Cell(1, 2).Value = "Name";
             worksheet.Cell(1, 3).Value = "SalesPrice";
             worksheet.Cell(1, 4).Value = "PurchasePrice";
-            worksheet.Cell(1, 5).Value = "Quantity";
+            worksheet.Cell(1, 5).Value = "StockQuantity";
             worksheet.Cell(1, 6).Value = "ProductId";
 
             int row = 2;
@@ -154,7 +171,7 @@ namespace Dragza.API.Controllers
                 worksheet.Cell(row, 2).Value = product.Product.Name;
                 worksheet.Cell(row, 3).Value = product.SalesPrice;
                 worksheet.Cell(row, 4).Value = product.PurchasePrice;
-                worksheet.Cell(row, 5).Value = 0; // Placeholder for quantity
+                worksheet.Cell(row, 5).Value = product.StockQuantity; // Placeholder for quantity
                 worksheet.Cell(row, 6).Value = product.ProductId.ToString(); // Placeholder for quantity
                 row++;
             }

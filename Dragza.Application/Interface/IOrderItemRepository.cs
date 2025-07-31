@@ -11,8 +11,6 @@ namespace Dragza.Application.Interface
     {
         IQueryable<BestSellerProduct> GetBestSellingProductsQuery(List<Guid> orderIds);
         Task<List<BestSellerProduct>> GetBestSellingProductsAsync(int topN);
-
-
-
-    }
+		Task<IEnumerable<OrderItem>> GetItemsByOrderIdAsync(Guid orderId);
+	}
 }

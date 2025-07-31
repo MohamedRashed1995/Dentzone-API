@@ -44,11 +44,11 @@ namespace Dragza.Infrastructure.Services
                 throw new InvalidOperationException("Only pharmacy users can create orders");
             }
 
-            // Calculate total amount
-            decimal totalAmount = orderDto.Items.Sum(item => item.Quantity * item.UnitPrice);
-
-            // Apply coupon discount if any
-            if (orderDto.CouponId.HasValue)
+                // Calculate total amount
+                //decimal totalAmount = orderDto.Items.Sum(item => item.Quantity * item.UnitPrice);
+                decimal totalAmount = orderDto.TotalAmount;
+			// Apply coupon discount if any
+			if (orderDto.CouponId.HasValue)
             {
                 var coupon = await _unitOfWork.CouponRepository.GetByIdAsync(orderDto.CouponId.Value);
                 if (coupon != null && coupon.IsActive == true)
@@ -100,6 +100,7 @@ namespace Dragza.Infrastructure.Services
             {
                 Id = Guid.NewGuid(),
                 PharmacyUserId = pharmacyUserId,
+                InventoryUserId = orderDto.Items.FirstOrDefault().InventoryUserId,
                 OrderDate = DateTime.UtcNow,
                 Status = (int)OrderStatus.Pending,
                 TotalAmount = totalAmount,
@@ -111,19 +112,27 @@ namespace Dragza.Infrastructure.Services
             // Add order items
             foreach (var itemDto in orderDto.Items)
             {
-                var orderItem = new OrderItem
-                {
-                    ProductId = itemDto.ProductId,
-                    Quantity = itemDto.Quantity,
-                    Id = Guid.NewGuid(),
-                    Amount = itemDto.Quantity,
-                    ProductPriceId = itemDto.ProductPriceId
-                };
-                order.OrderItems.Add(orderItem);
-            }
+					var productExists = await _unitOfWork.ProductRepository.GetProductWithDetailsAsync(itemDto.ProductId);
+					if (productExists==null)
+					{
+						throw new InvalidOperationException($"Product with ID {itemDto.ProductId} does not exist.");
+					}
+
+					var orderItem = new OrderItem
+					{
+						ProductId = itemDto.ProductId,
+						Quantity = itemDto.Quantity,
+						Id = Guid.NewGuid(),
+						Amount = itemDto.Quantity,
+						ProductPriceId = itemDto.ProductPriceId
+					};
+					order.OrderItems.Add(orderItem);
+				}
 
             await _unitOfWork.OrderRepository.AddAsync(order);
             await _unitOfWork.CommitAsync();
+            //await _unitOfWork.SaveChangesAsync();
+
 
             // Process payments
             if (creditAmount > 0)
@@ -148,6 +157,12 @@ namespace Dragza.Infrastructure.Services
                 throw ex;
             }
         }
+
+
+
+
+
+
         //public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto, Guid pharmacyUserId)
         //{
         //    using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -260,15 +275,102 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<List<OrderDto>>(orders);
         }
 
-        public async Task ReAssignOrder(ReAssignOrder reAssignOrderDto)
-        {
-            var order = await _unitOfWork.OrderRepository.GetByIdAsync(reAssignOrderDto.OrderId);
-            order.InventoryUserId = reAssignOrderDto.UserId;
-            _unitOfWork.OrderRepository.Update(order);
-            await _unitOfWork.SaveChangesAsync();
-        }
+		//public async Task ReAssignOrder(ReAssignOrder reAssignOrderDto)
+		//{
+		//    var order = await _unitOfWork.OrderRepository.GetByIdAsync(reAssignOrderDto.OrderId);
+		//    order.InventoryUserId = reAssignOrderDto.UserId;
+		//    _unitOfWork.OrderRepository.Update(order);
+		//    await _unitOfWork.SaveChangesAsync();
+		//}
+		public async Task<object> ReAssignOrder(ReAssignOrder reAssignOrderDto)
+		{
+            try
+            {
+                _logger.LogInformation("ReAssignOrder");
 
-        public async Task RemoveItem(RemoveItemDto removeItemDto)
+                // Get the original order with its items
+                var originalOrder = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(reAssignOrderDto.OrderId);
+                if (originalOrder == null)
+                {
+                    throw new InvalidOperationException("Order not found");
+                }
+
+                // Check if the new userId is the same as current InventoryUserId
+                if (originalOrder.InventoryUserId == reAssignOrderDto.UserId)
+                {
+                    return new { Message = "This order already exists" };
+                }
+
+                // Get the order items to be transferred
+                var itemsToTransfer = originalOrder.OrderItems.ToList();
+                if (reAssignOrderDto.OrderItemIds != null && reAssignOrderDto.OrderItemIds.Any())
+                {
+                    // Transfer only specific items
+                    itemsToTransfer = originalOrder.OrderItems
+                        .Where(oi => reAssignOrderDto.OrderItemIds.Contains(oi.Id))
+                        .ToList();
+                }
+
+                // Calculate total amount for items being transferred
+                decimal transferAmount = itemsToTransfer.Sum(item => item.Amount * item.Quantity);
+
+                // Create new order
+                var newOrder = new Order
+                {
+                    Id = Guid.NewGuid(),
+                    PharmacyUserId = originalOrder.PharmacyUserId,
+                    OrderDate = DateTime.UtcNow,
+                    Status = (int)OrderStatus.Pending,
+                    TotalAmount = transferAmount,
+                    InventoryUserId = reAssignOrderDto.UserId, // New inventory user
+                    IsApproved = false,
+                    ApprovalDate = null,
+                    CreditUsed = originalOrder.CreditUsed,
+                    CashPaid = originalOrder.CashPaid,
+                    CreditAccountId = originalOrder.CreditAccountId,
+                    CouponId = originalOrder.CouponId
+                };
+
+                // Add new order to database
+                await _unitOfWork.OrderRepository.AddAsync(newOrder);
+                await _unitOfWork.SaveChangesAsync(); // Save to get the new OrderId
+
+                // Update OrderId for transferred items
+                foreach (var item in itemsToTransfer)
+                {
+                    item.OrderId = newOrder.Id; // Change OrderId to new order
+                    _unitOfWork.OrderItemRepository.Update(item);
+					await _unitOfWork.SaveChangesAsync();
+				}
+				var remainingItems = await _unitOfWork.OrderItemRepository.GetItemsByOrderIdAsync(originalOrder.Id);
+
+				if (remainingItems.Count()==0) // No items found
+				{
+					originalOrder.Status = (int)OrderStatus.ReAssignTo;
+					originalOrder.TotalAmount = 0;
+				}
+				else
+				{
+					// Items still remain - keep original status, recalculate total
+					originalOrder.TotalAmount = remainingItems.Sum(item => item.Amount * item.Quantity);
+					// originalOrder.Status stays unchanged
+				}
+
+				_unitOfWork.OrderRepository.Update(originalOrder);
+                await _unitOfWork.SaveChangesAsync();
+                
+                return new
+                {
+                    Success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("ReAssignOrder :: ", ex);
+                throw;
+            }
+		}
+		public async Task RemoveItem(RemoveItemDto removeItemDto)
         {
             var item = await _unitOfWork.OrderItemRepository.GetByIdAsync(removeItemDto.ItemId);
             if (item.OrderId == removeItemDto.OrderId)
@@ -342,6 +444,8 @@ namespace Dragza.Infrastructure.Services
             return order;
         }
 
-        // Implement other methods...
-    }
+	
+
+		// Implement other methods...
+	}
 }

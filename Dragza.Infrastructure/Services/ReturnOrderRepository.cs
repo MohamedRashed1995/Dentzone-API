@@ -49,17 +49,19 @@ namespace Dragaza.Infrastructure.Repositories
 
         public async Task<IEnumerable<ReturnOrder>> GetAllWithDetailsAsync()
         {
-            return await _context.ReturnOrders
+			
+
+			return await _context.ReturnOrders
                 .Include(ro => ro.Order)
-                .Include(ro => ro.PharmacyUser)
-                .Include(ro => ro.InventoryUser)
+				.Include(ro => ro.PharmacyUser)
+				.Include(ro => ro.InventoryUser)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.Product)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.Reason)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.ProductPrice)
-                .AsNoTracking()
+				.AsNoTracking()
                 .ToListAsync();
         }
 

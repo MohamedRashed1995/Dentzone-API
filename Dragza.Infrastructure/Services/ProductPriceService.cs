@@ -139,5 +139,11 @@ namespace Dragza.Infrastructure.Services
 
             await _unitOfWork.CommitAsync();
         }
-    }
+
+		public async Task<IEnumerable<ProductPriceResponseDto>> GetAllProductPricesAsync(bool includeDeleted, string search)
+		{
+			var productPrices = await _unitOfWork.ProductPriceRepository.GetAllProductPricesWithDetailsAsync(includeDeleted, search);
+			return _mapper.Map<List<ProductPriceResponseDto>>(productPrices);
+		}
+	}
 }
