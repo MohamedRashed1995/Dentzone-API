@@ -70,10 +70,6 @@ public partial class DragzaContext : DbContext
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=db18536.public.databaseasp.net; Database=db18536; User Id=db18536; Password=Bj8=_Gx65w!Z; Encrypt=False; MultipleActiveResultSets=True;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseCollation("Latin1_General_CI_AS");
@@ -520,7 +516,6 @@ public partial class DragzaContext : DbContext
 
             entity.HasOne(d => d.InventoryUser).WithMany(p => p.ReturnOrderInventoryUsers)
                 .HasForeignKey(d => d.InventoryUserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ReturnOrder_User1");
 
             entity.HasOne(d => d.Order).WithMany(p => p.ReturnOrders)

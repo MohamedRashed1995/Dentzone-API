@@ -21,11 +21,11 @@ public partial class ReturnOrder
 
     public decimal TotalReturnValue { get; set; }
 
-    public Guid InventoryUserId { get; set; }
+    public Guid? InventoryUserId { get; set; }
 
     public string? ReturnOrderNumber { get; set; }
 
-    public virtual User InventoryUser { get; set; } = null!;
+    public virtual User? InventoryUser { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 
