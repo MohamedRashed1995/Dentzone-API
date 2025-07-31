@@ -70,6 +70,10 @@ public partial class DragzaContext : DbContext
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=db18536.public.databaseasp.net; Database=db18536; User Id=db18536; Password=Bj8=_Gx65w!Z; Encrypt=False; MultipleActiveResultSets=True;");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseCollation("Latin1_General_CI_AS");
@@ -364,6 +368,7 @@ public partial class DragzaContext : DbContext
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DeliverDate).HasColumnType("datetime");
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.OrderNumber).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.CreditAccount).WithMany(p => p.Orders)
@@ -386,6 +391,10 @@ public partial class DragzaContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Inventory).WithMany(p => p.OrderItems)
+                .HasForeignKey(d => d.InventoryId)
+                .HasConstraintName("FK_OrderItem_User");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.OrderId)
@@ -463,8 +472,8 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreationDate).HasColumnType("datetime");
             entity.Property(e => e.DeletedDate).HasColumnType("datetime");
-            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Category).WithMany(p => p.ProductPrices)
@@ -506,6 +515,7 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ApprovalDate).HasColumnType("datetime");
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
+            entity.Property(e => e.ReturnOrderNumber).HasMaxLength(50);
             entity.Property(e => e.TotalReturnValue).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.InventoryUser).WithMany(p => p.ReturnOrderInventoryUsers)
@@ -538,6 +548,10 @@ public partial class DragzaContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Inventory).WithMany(p => p.ReturnedItems)
+                .HasForeignKey(d => d.InventoryId)
+                .HasConstraintName("FK_ReturnedItem_User");
 
             entity.HasOne(d => d.Order).WithMany(p => p.ReturnedItems)
                 .HasForeignKey(d => d.OrderId)

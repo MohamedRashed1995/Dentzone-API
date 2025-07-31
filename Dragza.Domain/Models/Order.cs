@@ -31,6 +31,8 @@ public partial class Order
 
     public Guid? CreditAccountId { get; set; }
 
+    public string? OrderNumber { get; set; }
+
     public virtual ICollection<BalanceTransaction> BalanceTransactions { get; set; } = new List<BalanceTransaction>();
 
     public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();

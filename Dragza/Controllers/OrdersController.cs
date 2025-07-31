@@ -130,7 +130,14 @@ namespace Dragza.API.Controllers
             return Ok(orders);
         }
 
-
+        [HttpGet("related-orders")]
+        //[Authorize]
+        public async Task<IActionResult> GetRelatedOrdersAsync([FromQuery] string orderNumber)
+        {
+            //var vendorId = GetCurrentUserId();
+            var orders = await _orderService.GetRelatedOrdersAsync(orderNumber);
+            return Ok(orders);
+        }
         [HttpPost("re-assign")]
         [Authorize]
         public async Task<IActionResult> ReAssignOrder([FromBody] ReAssignOrder reAssignOrderDto)

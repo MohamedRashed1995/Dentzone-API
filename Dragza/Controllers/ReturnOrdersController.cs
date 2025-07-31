@@ -99,5 +99,13 @@ namespace Dragza.API.Controllers
 
             return Ok(returnOrder);
         }
+
+        [HttpGet("related-returns")]
+        [Authorize]
+        public async Task<IActionResult> GetVendorReturns([FromQuery] string returnNumber)
+        {
+            var results = await _returnService.GetRelatedReturns(returnNumber);
+            return Ok(results);
+        }
     }
 }

@@ -23,6 +23,8 @@ public partial class ReturnOrder
 
     public Guid InventoryUserId { get; set; }
 
+    public string? ReturnOrderNumber { get; set; }
+
     public virtual User InventoryUser { get; set; } = null!;
 
     public virtual Order Order { get; set; } = null!;
