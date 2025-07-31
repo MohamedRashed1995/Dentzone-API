@@ -17,8 +17,10 @@ namespace Dragza.Application.Interface
         Task<List<OrderDto>> GetUserOrdersAsync(Guid userId);
         Task<List<OrderDto>> GetVendorOrdersAsync(Guid vendorId);
 
-        Task ReAssignOrder(ReAssignOrder reAssignOrderDto);
-        Task RemoveItem(RemoveItemDto removeItemDto);
+        //Task ReAssignOrder(ReAssignOrder reAssignOrderDto);
+        Task<object> ReAssignOrder(ReAssignOrder reAssignOrderDto);
+
+		Task RemoveItem(RemoveItemDto removeItemDto);
         Task<Order> CompleteOrder(Guid orderId);
         Task<List<OrderDto>> GetAllorders();
     }

@@ -12,6 +12,7 @@ namespace Dragza.Domain.DTO.ReturnOrder
         public Guid Id { get; set; }
         public Guid OrderId { get; set; }
         public Guid PharmacyUserId { get; set; }
+        public string PharmacyName { get; set; }
         public DateTime RequestDate { get; set; }
         public ReturnOrderStatus Status { get; set; }
         public decimal TotalReturnValue { get; set; }

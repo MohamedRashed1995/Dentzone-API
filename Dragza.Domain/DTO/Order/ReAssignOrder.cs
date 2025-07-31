@@ -10,5 +10,7 @@ namespace Dragza.Domain.DTO.Order
     {
         public Guid OrderId { get; set; }
         public  Guid  UserId { get; set; }
+
+        public List<Guid> OrderItemIds { get; set; } 
     }
 }

@@ -14,8 +14,8 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ProductBestPriceDto>> GetProductsBestPricesAsync();
         Task<IEnumerable<ProductPriceDetailsDto>> GetPricesByCategoryAsync(Guid categoryId);
         Task<IEnumerable<ProductPriceDetailsDto>> GetPricesByProductAsync(Guid productId);
-
-        Task<IEnumerable<InventoryUserPriceDetailsDto>> GetPricesByInventoryUserAsync(Guid userId);
+		Task<IEnumerable<ProductPriceResponseDto>> GetAllProductPricesAsync(bool includeDeleted, string search);
+		Task<IEnumerable<InventoryUserPriceDetailsDto>> GetPricesByInventoryUserAsync(Guid userId);
         Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity , Guid userId);
 
     }

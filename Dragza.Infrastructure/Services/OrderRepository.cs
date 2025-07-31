@@ -88,5 +88,12 @@ namespace Dragza.Infrastructure.Services
                 .Take(topN)
                 .ToListAsync();
         }
-    }
+
+		public async Task<IEnumerable<OrderItem>> GetItemsByOrderIdAsync(Guid orderId)
+		{
+			return await _context.OrderItems
+				.Where(oi => oi.OrderId == orderId)
+				.ToListAsync();
+		}
+	}
 }

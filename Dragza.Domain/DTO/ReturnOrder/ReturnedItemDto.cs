@@ -10,6 +10,7 @@ namespace Dragza.Domain.DTO.ReturnOrder
     {
         public Guid ProductId { get; set; }
         public string ProductName { get; set; }
+        public string ?InventoryName { get; set; }
         public Guid ProductPriceId { get; set; }
         public int QuantityReturned { get; set; }
         public Guid ReasonId { get; set; }

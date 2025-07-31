@@ -454,7 +454,8 @@ public partial class DragzaContext : DbContext
             entity.HasOne(d => d.MainCategory).WithMany(p => p.Products)
                 .HasForeignKey(d => d.MainCategoryId)
                 .HasConstraintName("FK_Product_MainCategory");
-        });
+		
+		});
 
         modelBuilder.Entity<ProductPrice>(entity =>
         {
@@ -463,8 +464,8 @@ public partial class DragzaContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreationDate).HasColumnType("datetime");
             entity.Property(e => e.DeletedDate).HasColumnType("datetime");
-            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalesPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Category).WithMany(p => p.ProductPrices)

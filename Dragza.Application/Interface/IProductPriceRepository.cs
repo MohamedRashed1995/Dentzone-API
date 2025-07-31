@@ -15,6 +15,8 @@ namespace Dragza.Application.Interface
         Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId);
         Task<List<ProductPrice>> GetPricesByProduct(Guid productId);
         Task<List<ProductPrice>> GetPricesByInventoryUser(Guid userId);
-        Task<ProductPrice> GetPricesByInventoryAndProduct(Guid userId, Guid productId);
+        Task<IEnumerable<ProductPrice>> GetAllProductPricesWithDetailsAsync(bool includeDeleted, string search);
+
+		Task<ProductPrice> GetPricesByInventoryAndProduct(Guid userId, Guid productId);
     }
 }
