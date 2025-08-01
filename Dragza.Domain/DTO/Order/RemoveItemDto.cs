@@ -8,6 +8,7 @@ namespace Dragza.Domain.DTO.Order
 {
     public class RemoveItemDto
     {
+        public string OrderNumber { get; set; }
         public Guid OrderId { get; set; }
         public Guid ItemId { get; set; }
     }
