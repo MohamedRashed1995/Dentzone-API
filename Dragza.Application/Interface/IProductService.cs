@@ -12,7 +12,7 @@ namespace Dragza.Application.Interface
     {
         Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto);
         Task<ProductResponseDto> GetProductByIdAsync(Guid id);
-        Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search);
+        Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
         Task<ProductResponseDto> UpdateProductAsync(Guid id, UpdateProductDto dto);
         Task SoftDeleteProductAsync(Guid id);
         Task RestoreProductAsync(Guid id);

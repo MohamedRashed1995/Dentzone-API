@@ -15,6 +15,7 @@ namespace Dragza.Domain.DTO
         public DateTime PriceDate { get; set; }
         public UserDto InventoryUser { get; set; }
         public string? ProductArabicName { get; set; }
+        public int Quantity { get; set; }
 
     }
 }

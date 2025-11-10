@@ -29,21 +29,36 @@ namespace Dragza.Infrastructure.Services
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted , string search)
+        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted , string search="", int page = 1, int size = 10)
         {
-            var query =  _context.Products
-                .Where(p => p.IsDeleted != true)
-                .Include(p => p.Category)
-                .Include(p => p.ActiveIngerdient)
-                .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.InventoryUser)
-                .AsQueryable();
+            try
+            {
+               var query = _context.Products
+              .Where(p => p.IsDeleted != true)
+              .Include(p => p.Category)
+              .Include(p => p.ActiveIngerdient)
+              .Include(p => p.ProductPrices)
+                  .ThenInclude(pp => pp.InventoryUser)
+              .AsQueryable();
+                var totalrow = query.Count();
+              
+                var pages = (int)Math.Ceiling((decimal)totalrow / size);
+             
 
-            
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
+                query = query.Skip((page - 1) * size).Take(size);
 
-            return await query.ToListAsync();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                    query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
+
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+          
         }
         public async Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId)
         {
@@ -68,6 +83,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.ActiveIngerdient)
+                .Include(a=>a.ProductPrices)
                 .Where(p => p.CategoryId == categoryId && (p.IsDeleted == null || p.IsDeleted == false))
                 .ToListAsync();
         }

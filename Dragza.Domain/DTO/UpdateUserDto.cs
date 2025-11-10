@@ -18,6 +18,7 @@ namespace Dragza.Domain.DTO
         public bool? IsActive { get; set; }
 
         public string? UserName { get; set; }
+        public string? Address { get; set; }
 
         public string? NomalizedUserName { get; set; }
 
@@ -31,8 +32,8 @@ namespace Dragza.Domain.DTO
 
         public bool? PhoneConfirmed { get; set; }
 
-        public string RegionName { get; set; } = null!;
-        public string DesName { get; set; } = null!;
+        public string? RegionName { get; set; } = null!;
+        public string? DesName { get; set; } = null!;
         public Decimal? MinOrder { get; set; } = null!;
 
         public string? Lang { get; set; }

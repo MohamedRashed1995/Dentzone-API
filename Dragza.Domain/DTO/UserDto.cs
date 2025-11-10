@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dragza.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,11 @@ namespace Dragza.Domain.DTO
         public string PhoneNumber { get; set; } = string.Empty;
         public string BusinessName { get; set; } = string.Empty;
         public bool IsPharmacy { get; set; }    = false;
-        public string Region { get; set; } = string.Empty;
+        //public string Region { get; set; } = string.Empty;
         public decimal MinOrder { get; set; } = 0;
         public bool IsActive { get; set; } = true;
         public Guid Accountid { get; set; }
+        public string? Address { get; set; }
 
         public string? BussinesName { get; set; } = string.Empty;
 
@@ -43,5 +45,8 @@ namespace Dragza.Domain.DTO
         public Guid? SubAreaId { get; set; }
         public string? RegionName { get; set; }
         public string? SubAreaName { get; set; }
+        public PharmacyDetailsDto? PharmacyDetails { get; set; }
+        public  RegionDto? Region { get; set; }
+        public  GovernateDto? SubArea { get; set; }
     }
 }

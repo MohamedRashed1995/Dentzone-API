@@ -11,12 +11,14 @@ namespace Dragza.Application.Interface
     {
         Task<IEnumerable<ProductPrice>> GetPricesByProductAsync(Guid productId);
         Task<IEnumerable<ProductPrice>> GetPricesByInventoryUserAsync(Guid userId);
-        Task<List<ProductPrice>> GetBestPricesAsync();
+        Task<List<ProductPrice>> GetBestPricesAsync(int page=1,int size=10);
         Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId);
         Task<List<ProductPrice>> GetPricesByProduct(Guid productId);
         Task<List<ProductPrice>> GetPricesByInventoryUser(Guid userId);
-        Task<IEnumerable<ProductPrice>> GetAllProductPricesWithDetailsAsync(bool includeDeleted, string search);
+        Task<IEnumerable<ProductPrice>> GetAllProductPricesWithDetailsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
 
 		Task<ProductPrice> GetPricesByInventoryAndProduct(Guid userId, Guid productId);
+
+        Task<List<ProductPrice>> GetBestPricesSortingAsync(int sort, int page = 1, int size = 10);
     }
 }

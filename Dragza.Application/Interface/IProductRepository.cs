@@ -10,7 +10,7 @@ namespace Dragza.Application.Interface
     public interface IProductRepository : IRepository<Product>
     {
         Task<Product> GetProductWithDetailsAsync(Guid id);
-        Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted, string search);
+        Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
         Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId);
         Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId);
         Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId);

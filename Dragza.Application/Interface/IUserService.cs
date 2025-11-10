@@ -18,6 +18,7 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<UserWithPharmacyDto>> GetUsersByRoleWithPharmacyAsync(Guid roleId);
         Task<UserDto> GetUser(Guid id);
         Task<UserResponseDto> UpdateUserAsync(Guid userId,UpdateUserDto updateUserDto);
+        Task<bool> ChangePasswordAsync(ChangePassword model);
 
     }
 }

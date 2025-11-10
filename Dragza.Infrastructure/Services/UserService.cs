@@ -78,6 +78,12 @@ namespace Dragza.Infrastructure.Services
         public async Task<JWTTokenDTO> LoginAsync(LoginDto loginDto)
         {
             var user = await _unitOfWork.UserRepository.FindByUsernameOrEmailAsync(loginDto.UsernameOrEmail);
+            if (user.IsDeleted == true)
+            {
+               return new JWTTokenDTO { HasDetails = false };
+            }
+
+
             if (user == null || !_passwordHasher.VerifyPassword(loginDto.Password, user.Password))
                 throw new UnauthorizedAccessException("Invalid credentials.");
 
@@ -242,7 +248,7 @@ namespace Dragza.Infrastructure.Services
             try
             {
                 var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(userid);
-
+                
                 _mapper.Map(createUserDto, existingUser);
                 if (createUserDto.Password != null)
                         existingUser.Password = _passwordHasher.HashPassword(createUserDto.Password);
@@ -314,6 +320,45 @@ namespace Dragza.Infrastructure.Services
 
 
         }
+
+        public async Task<bool> ChangePasswordAsync(ChangePassword model)
+        {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(model.UserId);
+
+                var oldPassword = _passwordHasher.HashPassword(model.CurrentPassword);
+
+                var isRight = _passwordHasher.VerifyPassword(model.CurrentPassword, oldPassword);
+
+                if (oldPassword==existingUser.Password)
+                {
+                    existingUser.Password = _passwordHasher.HashPassword(model.NewPassword);
+                    _unitOfWork.UserRepository.Update(existingUser);
+                    await _unitOfWork.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+              
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+
+                throw;
+            }
+           
+
+
+        }
+
+       
 
     }
 }

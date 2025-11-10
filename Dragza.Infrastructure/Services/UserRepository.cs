@@ -25,9 +25,14 @@ namespace Dragza.Infrastructure.Services
         public async Task<User> GetByIdAsync(Guid id)
         {
             return await _context.Users
+               .Include(s=>s.SubArea)
+                .Include(a=>a.Region)
                 .Include(u => u.BalanceAccounts)
                 .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
+                 .ThenInclude(ur => ur.Role)
+                .Include(u=>u.PharmacyDetailUsers)
+                
+               
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 

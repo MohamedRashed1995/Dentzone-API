@@ -61,9 +61,15 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<IEnumerable<ProductPriceResponseDto>>(prices);
         }
 
-        public async Task<IEnumerable<ProductBestPriceDto>> GetProductsBestPricesAsync()
+        public async Task<IEnumerable<ProductBestPriceDto>> GetProductsBestPricesAsync(int page = 1, int size = 10)
         {
-            var bestPrices = await _unitOfWork.ProductPriceRepository.GetBestPricesAsync();
+            var bestPrices = await _unitOfWork.ProductPriceRepository.GetBestPricesAsync(page,size);
+            return _mapper.Map<IEnumerable<ProductBestPriceDto>>(bestPrices);
+        }
+
+        public async Task<IEnumerable<ProductBestPriceDto>> GetProductsBestPricesSortingAsync(int sort, int page = 1, int size = 10)
+        {
+            var bestPrices = await _unitOfWork.ProductPriceRepository.GetBestPricesSortingAsync(sort, page, size );
             return _mapper.Map<IEnumerable<ProductBestPriceDto>>(bestPrices);
         }
 
@@ -140,9 +146,9 @@ namespace Dragza.Infrastructure.Services
             await _unitOfWork.CommitAsync();
         }
 
-		public async Task<IEnumerable<ProductPriceResponseDto>> GetAllProductPricesAsync(bool includeDeleted, string search)
+		public async Task<IEnumerable<ProductPriceResponseDto>> GetAllProductPricesAsync(bool includeDeleted, string search, int page = 1, int size = 10)
 		{
-			var productPrices = await _unitOfWork.ProductPriceRepository.GetAllProductPricesWithDetailsAsync(includeDeleted, search);
+			var productPrices = await _unitOfWork.ProductPriceRepository.GetAllProductPricesWithDetailsAsync(includeDeleted, search,page,size);
 			return _mapper.Map<List<ProductPriceResponseDto>>(productPrices);
 		}
 	}

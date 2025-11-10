@@ -371,7 +371,7 @@ namespace Dragza.Infrastructure.Services
                 var transaction = pharmacyTransaction.FirstOrDefault();
                 if (transaction != null)
                 {
-                    transaction.Amount = transaction.Amount + (item.ProductPrice.PurchasePrice * item.Quantity);
+                    transaction.Amount = transaction.Amount + ((item.ProductPrice.PurchasePrice??0) * item.Quantity);
                     _unitOfWork.BalanceTransactionRepository.Update(transaction);
                     await _unitOfWork.SaveChangesAsync();
                 }

@@ -3,8 +3,10 @@ using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
 using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace Dragza.API.Controllers
 {
@@ -25,7 +27,7 @@ namespace Dragza.API.Controllers
 
         public async Task<IActionResult> Register([FromForm] CreateUserDto createUserDto)
         {
-            _logger.LogInformation("Register object :: {0}" ,JsonConvert.SerializeObject(createUserDto) );
+            _logger.LogInformation("Register object :: {0}" ,JsonConvert.SerializeObject(createUserDto));
 
             await _userService.RegisterUserAsync(createUserDto);
             var loginDto = new LoginDto
@@ -56,6 +58,17 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var result = await _userService.LoginAsync(loginDto);
+            if (result.HasDetails == false)
+            {
+                return Ok(
+
+                    new
+                    {
+                        message= "user does not exist",
+                        statsus=HttpStatusCode.NotFound
+                    }
+                    );
+            }
             return Ok(result);
         }
 
@@ -104,5 +117,40 @@ namespace Dragza.API.Controllers
             var result = await _userService.DeActivateUser(Id);
             return Ok(result);
         }
+
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(ChangePassword model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var user = await _userService.ChangePasswordAsync(model);
+                    if (user) {
+
+                        return Ok(new
+                        {
+                            message="تم تغير كلمه المرور",
+                            status= HttpStatusCode.OK
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest(new
+                        {
+                            message = "كلمه المرور الحاليه غير متطابقه",
+                            status = HttpStatusCode.BadRequest
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+                throw;
+            }
+            return Ok();
+        }
+
     }
 }

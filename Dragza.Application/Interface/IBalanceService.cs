@@ -11,6 +11,7 @@ namespace Dragza.Application.Interface
     public interface IBalanceService
     {
         Task<UserBalancesDto> GetUserBalances(Guid userId);
+    
         Task<BalanceAccountDto> GetBalanceAccount(Guid accountId);
         Task<BalanceTransactionDto> CreateTransaction(Guid accountId, decimal amount, Guid userId,
             TransactionType type, string description, Guid? orderId = null);

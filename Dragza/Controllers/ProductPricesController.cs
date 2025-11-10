@@ -48,18 +48,25 @@ namespace Dragza.API.Controllers
             return Ok( result);
         }
 
-        [HttpGet("my-prices")]
-        public async Task<IActionResult> GetUserPrices()
+        [HttpGet("my-prices/{userId}")]
+        public async Task<IActionResult> GetUserPrices(Guid userId)
         {
-            var userId = GetCurrentUserId();
+            //var userId = GetCurrentUserId();
             var prices = await _priceService.GetPricesByUserAsync(userId);
             return Ok(prices);
         }
 
         [HttpGet("best-prices")]
-        public async Task<IActionResult> GetProductsBestPrices()
+        public async Task<IActionResult> GetProductsBestPrices(int page = 1, int size = 10)
         {
-            var bestPrices = await _priceService.GetProductsBestPricesAsync();
+            var bestPrices = await _priceService.GetProductsBestPricesAsync( page, size );
+            return Ok(bestPrices);
+        }
+
+        [HttpGet("best-prices-bysorting")]
+        public async Task<IActionResult> GetProductsBestPricesbysorting(int sort, int page = 1, int size = 10)
+        {
+            var bestPrices = await _priceService.GetProductsBestPricesSortingAsync(sort,page,size);
             return Ok(bestPrices);
         }
 

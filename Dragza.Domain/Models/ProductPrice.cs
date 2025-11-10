@@ -9,11 +9,11 @@ public partial class ProductPrice
 
     public Guid ProductId { get; set; }
 
-    public Guid CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
 
-    public decimal PurchasePrice { get; set; }
+    public decimal? PurchasePrice { get; set; }
 
-    public decimal SalesPrice { get; set; }
+    public decimal? SalesPrice { get; set; }
 
     public DateTime? CreationDate { get; set; }
 
@@ -29,7 +29,7 @@ public partial class ProductPrice
 
     public Guid? MainCategoryId { get; set; }
 
-    public virtual Category Category { get; set; } = null!;
+    public virtual Category? Category { get; set; } = null!;
 
     public virtual User InventoryUser { get; set; } = null!;
 

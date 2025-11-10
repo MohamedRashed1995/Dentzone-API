@@ -56,9 +56,9 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<ProductResponseDto>(product);
         }
 
-        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted , string search)
+        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted , string search, int page = 1, int size = 10)
         {
-            var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted ,search);
+            var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted ,search,page,size);
             return _mapper.Map<List<ProductResponseDto>>(products);
         }
 

@@ -51,9 +51,9 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts([FromQuery] int lang,[FromQuery] bool includeDeleted = false, [FromQuery] string search = null)
+        public async Task<IActionResult> GetAllProducts([FromQuery] int lang,[FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
         {
-			var products = await _productService.GetAllProductsAsync(includeDeleted, search);
+			var products = await _productService.GetAllProductsAsync(includeDeleted, search,page,size);
 			if (lang == 0) // Assuming 0 is for Arabic
 			{
 			    foreach (var product in products)
@@ -67,10 +67,10 @@ namespace Dragza.API.Controllers
 		}
 
 		[HttpGet("product-prices-with-data")]
-		public async Task<IActionResult> GetAllProductPricesWithProductData([FromQuery] int lang, [FromQuery] bool includeDeleted = false, [FromQuery] string search = null)
+		public async Task<IActionResult> GetAllProductPricesWithProductData([FromQuery] int lang, [FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
 		{
 
-			var productPrices = await _productPriceService.GetAllProductPricesAsync(includeDeleted, search);
+			var productPrices = await _productPriceService.GetAllProductPricesAsync(includeDeleted, search,page,size);
 			if (lang == 0) // Assuming 0 is for Arabic
 			{
 				foreach (var product in productPrices)

@@ -6,6 +6,7 @@ using Dragza.Domain.DTO.ReturnOrder;
 using Dragza.Domain.Enum;
 using Dragza.Domain.Models;
 using Microsoft.AspNetCore.Http;
+using System.Collections.ObjectModel;
 
 namespace Dragza.Application.Mapping
 {
@@ -26,7 +27,8 @@ namespace Dragza.Application.Mapping
                     opt => opt.MapFrom(src => src.City));
             CreateMap<PharmacyDetailsDto, PharmacyDetail>();
 
-            CreateMap<User, UserResponseDto>();
+            CreateMap<User, UserResponseDto>()
+                .ForMember(dest=>dest.PharmacyDetails,opt=>opt.MapFrom(src=>src.PharmacyDetailUsers.FirstOrDefault()));
 
             CreateMap<PharmacyDetail, PharmacyDetailsDto>();
 
@@ -85,6 +87,8 @@ namespace Dragza.Application.Mapping
                 .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.RegionId))
                 .ForMember(dest => dest.SubAreaId, opt => opt.MapFrom(src => src.SubAreaId))
                 .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region == null ? string.Empty : src.Region.RegionName))
+                 .ForMember(dest => dest.PharmacyDetails,
+               opt => opt.MapFrom(src => src.PharmacyDetailUsers.FirstOrDefault()))
                 .ForMember(dest => dest.SubAreaName, opt => opt.MapFrom(src => src.SubArea == null ? string.Empty : src.SubArea.Name));
 
             //  .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.MinOrder ?? 0m));
@@ -166,7 +170,9 @@ namespace Dragza.Application.Mapping
             .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.Product.ArabicName))
             .ForMember(dest => dest.BestSalesPrice, opt => opt.MapFrom(src => src.SalesPrice))
             .ForMember(dest => dest.PriceId, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate));
+            .ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate))
+            .ForMember(dest=>dest.Quantity,op=>op.MapFrom(src=>src.StockQuantity)).ReverseMap();
+            
 
             CreateMap<CreateProductPriceDto, ProductPrice>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))
@@ -367,6 +373,8 @@ namespace Dragza.Application.Mapping
      .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.RegionId))
      .ForMember(dest => dest.SubAreaId, opt => opt.MapFrom(src => src.GovId))
      .ForMember(dest => dest.MinOrder, opt => opt.MapFrom(src => src.MinOrder))
+    
+
      .ForAllMembers(opts => opts.Condition((src, dest, srcMember) =>
          srcMember != null &&
          !(srcMember is IFormFile) && // Exclude IFormFile from automatic mapping
@@ -375,6 +383,7 @@ namespace Dragza.Application.Mapping
             // PharmacyDetails mapping
             CreateMap<PharmacyDetailsDto, PharmacyDetail>()
                 .ForMember(dest => dest.UserId, opt => opt.Ignore()) // Will be set in service
+               
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
 
