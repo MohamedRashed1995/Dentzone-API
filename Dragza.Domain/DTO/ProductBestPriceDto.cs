@@ -16,6 +16,7 @@ namespace Dragza.Domain.DTO
         public UserDto InventoryUser { get; set; }
         public string? ProductArabicName { get; set; }
         public int Quantity { get; set; }
+        public decimal Discount { get; set; }
 
     }
 }

@@ -46,7 +46,9 @@ namespace Dragza.Domain.DTO
 		public Guid InventoryUserId { get; set; }
 		public string InventoryUserName { get; set; }
 		public int StockQuantity { get; set; }
+        public decimal DiscountRate { get; set; }
 
 
-	}
+
+    }
 }

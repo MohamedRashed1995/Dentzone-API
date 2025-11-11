@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Dragza.Domain.Models;
 
@@ -28,6 +29,8 @@ public partial class ProductPrice
     public int StockQuantity { get; set; }
 
     public Guid? MainCategoryId { get; set; }
+    [Column("Discount Rate")]  // exact column name in SQL Server
+    public decimal DiscountRate { get; set; }
 
     public virtual Category? Category { get; set; } = null!;
 

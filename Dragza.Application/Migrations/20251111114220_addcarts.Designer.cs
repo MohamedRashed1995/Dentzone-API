@@ -4,6 +4,7 @@ using Dragza.Application.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dragza.Application.Migrations
 {
     [DbContext(typeof(DragzaContext))]
-    partial class DragzaContextModelSnapshot : ModelSnapshot
+    [Migration("20251111114220_addcarts")]
+    partial class addcarts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,9 +178,6 @@ namespace Dragza.Application.Migrations
                     b.Property<int>("CartId")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("InventoryUserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -187,8 +187,6 @@ namespace Dragza.Application.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
-
-                    b.HasIndex("InventoryUserId");
 
                     b.HasIndex("ProductId");
 
@@ -1157,12 +1155,6 @@ namespace Dragza.Application.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.User", "InventoryUser")
-                        .WithMany()
-                        .HasForeignKey("InventoryUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -1170,8 +1162,6 @@ namespace Dragza.Application.Migrations
                         .IsRequired();
 
                     b.Navigation("Cart");
-
-                    b.Navigation("InventoryUser");
 
                     b.Navigation("Product");
                 });

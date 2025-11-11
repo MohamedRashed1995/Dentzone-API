@@ -171,6 +171,7 @@ namespace Dragza.Application.Mapping
             .ForMember(dest => dest.BestSalesPrice, opt => opt.MapFrom(src => src.SalesPrice))
             .ForMember(dest => dest.PriceId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate))
+            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.DiscountRate))
             .ForMember(dest=>dest.Quantity,op=>op.MapFrom(src=>src.StockQuantity)).ReverseMap();
             
 

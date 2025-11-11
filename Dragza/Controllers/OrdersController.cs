@@ -32,7 +32,7 @@ namespace Dragza.API.Controllers
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
         }
 
-        [HttpPut("{orderId}/approve")]
+        [HttpPut("approve/{orderId}")]
         [Authorize]
         public async Task<IActionResult> ApproveOrder(Guid itemId)
         {

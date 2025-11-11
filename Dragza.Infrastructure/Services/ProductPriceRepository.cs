@@ -78,15 +78,15 @@ namespace Dragza.Infrastructure.Services
 
                         var productPrices = productPricesData
                 .GroupBy(pp => pp.ProductId)
-                .Select(g => g.OrderBy(pp => pp.SalesPrice).FirstOrDefault());
+                .Select(g => g.OrderBy(pp => pp.DiscountRate).FirstOrDefault());
 
             if (sort == 1)
             {
-                productPrices = productPrices.OrderByDescending(s => s.SalesPrice);
+                productPrices = productPrices.OrderByDescending(s => s.DiscountRate);
             }
             if (sort == 2)
             {
-                productPrices = productPrices.OrderBy(s => s.SalesPrice);
+                productPrices = productPrices.OrderBy(s => s.DiscountRate);
             }
            
 

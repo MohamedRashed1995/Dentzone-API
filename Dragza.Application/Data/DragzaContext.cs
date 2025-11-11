@@ -70,6 +70,11 @@ public partial class DragzaContext : DbContext
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+    public virtual DbSet<CartItem> CartItems { get; set; }
+
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseCollation("Latin1_General_CI_AS");

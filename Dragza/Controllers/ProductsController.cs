@@ -198,13 +198,21 @@ namespace Dragza.API.Controllers
 
             foreach (var row in worksheet.RowsUsed().Skip(1)) // Skip header
             {
-                var productPriceId = Guid.Parse(row.Cell(1).GetString());
-                var salesPrice = decimal.Parse(row.Cell(3).GetString());
-                var purchasePrice = int.Parse(row.Cell(4).GetString());
-                var quantity = int.Parse(row.Cell(5).GetString());
-                var productId = Guid.Parse(row.Cell(6).GetString());
+                //var productPriceId = Guid.Parse(row.Cell(1).GetString());
+                //var salesPrice = decimal.Parse(row.Cell(3).GetString());
+                //var purchasePrice = int.Parse(row.Cell(4).GetString());
+                //var quantity = int.Parse(row.Cell(5).GetString());
+                //var productId = Guid.Parse(row.Cell(6).GetString());
+                var productName = row.Cell(1).GetString().Trim();
+                if (string.IsNullOrWhiteSpace(productName))
+                    continue;
 
-                await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity,userId);
+                var salesPrice = row.Cell(2).GetValue<decimal>();
+                var discountRate = row.Cell(3).GetValue<decimal>();
+                var stockQuantity = row.Cell(4).GetValue<int>();
+                var maxQuantity = row.Cell(5).GetValue<int>();
+
+               // await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity,userId);
             }
 
             return Ok("Products updated successfully.");

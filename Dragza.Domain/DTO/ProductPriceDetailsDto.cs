@@ -18,6 +18,7 @@ namespace Dragza.Domain.DTO
         public CategoryDto Category { get; set; }
         public UserDto InventoryUser { get; set; }
         public int StockQuantity { get; set; }
+        public decimal DiscountRate { get; set; }
 
     }
 }
