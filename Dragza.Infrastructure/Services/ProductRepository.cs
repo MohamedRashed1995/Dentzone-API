@@ -125,5 +125,14 @@ namespace Dragza.Infrastructure.Services
             return products;
 
         }
+
+        public async Task<Product> GetProductByName(string name)
+        {
+            var product = await _context.Products.Include(a=>a.ProductPrices)
+                .Where(a => a.Name.Contains(name) || a.ArabicName.Contains(name)).FirstOrDefaultAsync();
+              
+
+            return product;
+        }
     }
 }

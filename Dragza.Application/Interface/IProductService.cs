@@ -21,6 +21,7 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId);
 
         Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId);
+        Task<Product>GetproductbyName(string name);
 
     }
 }

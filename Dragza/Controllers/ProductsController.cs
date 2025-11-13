@@ -198,21 +198,60 @@ namespace Dragza.API.Controllers
 
             foreach (var row in worksheet.RowsUsed().Skip(1)) // Skip header
             {
-                //var productPriceId = Guid.Parse(row.Cell(1).GetString());
-                //var salesPrice = decimal.Parse(row.Cell(3).GetString());
-                //var purchasePrice = int.Parse(row.Cell(4).GetString());
-                //var quantity = int.Parse(row.Cell(5).GetString());
-                //var productId = Guid.Parse(row.Cell(6).GetString());
+                var productPriceId = Guid.Parse(row.Cell(1).GetString());
+                var salesPrice = decimal.Parse(row.Cell(3).GetString());
+                var purchasePrice = int.Parse(row.Cell(4).GetString());
+                var quantity = int.Parse(row.Cell(5).GetString());
+                var productId = Guid.Parse(row.Cell(6).GetString());
+                //var productName = row.Cell(1).GetString().Trim();
+                //if (string.IsNullOrWhiteSpace(productName))
+                //    continue;
+
+                //var salesPrice = row.Cell(2).GetValue<decimal>();
+                //var discountRate = row.Cell(3).GetValue<decimal>();
+                //var stockQuantity = row.Cell(4).GetValue<int>();
+                //var maxQuantity = row.Cell(5).GetValue<int>();
+
+                await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity, quantity,userId);
+            }
+
+            return Ok("Products updated successfully.");
+        }
+
+
+        [HttpPost("ImportAddProductsFromExcel")]
+       
+        public async Task<IActionResult> ImportAddProductsFromExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+            var userId = GetCurrentUserId();
+
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+            var worksheet = workbook.Worksheet(1);
+         
+
+            
+
+            foreach (var row in worksheet.RowsUsed().Skip(1)) // Skip header
+            {
+              
+
                 var productName = row.Cell(1).GetString().Trim();
                 if (string.IsNullOrWhiteSpace(productName))
                     continue;
+                var product = await _productService.GetproductbyName(productName);
+                var productPrice = product.ProductPrices.Where(a => a.InventoryUserId == userId).FirstOrDefault();
 
                 var salesPrice = row.Cell(2).GetValue<decimal>();
                 var discountRate = row.Cell(3).GetValue<decimal>();
                 var stockQuantity = row.Cell(4).GetValue<int>();
                 var maxQuantity = row.Cell(5).GetValue<int>();
+                var purchasePrice = row.Cell(6).GetValue<int>();
 
-               // await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity,userId);
+                await _productPriceService.UpdateProductPriceAndQuantityAsync(product.Id, productPrice.Id, salesPrice, purchasePrice, stockQuantity, maxQuantity, userId);
             }
 
             return Ok("Products updated successfully.");

@@ -4,6 +4,7 @@ using Dragza.Application.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dragza.Application.Migrations
 {
     [DbContext(typeof(DragzaContext))]
-    partial class DragzaContextModelSnapshot : ModelSnapshot
+    [Migration("20251112092213_addprice")]
+    partial class addprice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,11 +158,16 @@ namespace Dragza.Application.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid>("ProductPriceId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductPriceId");
 
                     b.ToTable("Carts");
                 });
@@ -181,14 +189,8 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ProductPriceId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -197,8 +199,6 @@ namespace Dragza.Application.Migrations
                     b.HasIndex("InventoryUserId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductPriceId");
 
                     b.ToTable("CartItems");
                 });
@@ -809,9 +809,6 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid?>("MainCategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MaxQuantity")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1160,6 +1157,17 @@ namespace Dragza.Application.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Dragza.Domain.Models.Cart", b =>
+                {
+                    b.HasOne("Dragza.Domain.Models.ProductPrice", "ProductPrice")
+                        .WithMany()
+                        .HasForeignKey("ProductPriceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductPrice");
+                });
+
             modelBuilder.Entity("Dragza.Domain.Models.CartItem", b =>
                 {
                     b.HasOne("Dragza.Domain.Models.Cart", "Cart")
@@ -1180,19 +1188,11 @@ namespace Dragza.Application.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.ProductPrice", "ProductPrice")
-                        .WithMany()
-                        .HasForeignKey("ProductPriceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Cart");
 
                     b.Navigation("InventoryUser");
 
                     b.Navigation("Product");
-
-                    b.Navigation("ProductPrice");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Category", b =>

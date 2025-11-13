@@ -168,5 +168,11 @@ namespace Dragza.Infrastructure.Services
 
             return productPrice;
         }
+
+        public async Task<Product> GetproductbyName(string name)
+        {
+            return await _unitOfWork.ProductRepository.GetProductByName(name);
+            
+        }
     }
 }

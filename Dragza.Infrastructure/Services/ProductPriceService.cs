@@ -104,8 +104,8 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<IEnumerable<InventoryUserPriceDetailsDto>>(prices);
         }
 
-        public async Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity , Guid userId)
-        {
+        public async Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity ,int maxQuantity,Guid userId)
+            {
             if (productPriceId != Guid.Empty && productPriceId != null)
             {
                 var productPrice = await _unitOfWork.ProductPriceRepository.GetByIdAsync(productPriceId);
@@ -116,6 +116,7 @@ namespace Dragza.Infrastructure.Services
                     productPrice.SalesPrice = salesPrice;
                     productPrice.PurchasePrice = purchasePrice;
                     productPrice.StockQuantity = quantity;
+                    productPrice.MaxQuantity = maxQuantity;
                     productPrice.UpdatedDate = DateTime.UtcNow;
                 }
             }

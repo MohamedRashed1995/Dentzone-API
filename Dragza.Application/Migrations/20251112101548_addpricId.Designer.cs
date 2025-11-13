@@ -4,6 +4,7 @@ using Dragza.Application.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dragza.Application.Migrations
 {
     [DbContext(typeof(DragzaContext))]
-    partial class DragzaContextModelSnapshot : ModelSnapshot
+    [Migration("20251112101548_addpricId")]
+    partial class addpricId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,9 +189,6 @@ namespace Dragza.Application.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -808,9 +808,6 @@ namespace Dragza.Application.Migrations
 
                     b.Property<Guid?>("MainCategoryId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("MaxQuantity")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");

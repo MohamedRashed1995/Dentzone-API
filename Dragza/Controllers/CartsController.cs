@@ -24,13 +24,21 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetCart(string userId)
         {
             var cart = await _context.Carts
+              
                 .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
-                .ThenInclude(a=>a.ProductPrices)
+                    .Include(c => c.Items)
+                .ThenInclude(i => i.ProductPrice)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+
+
+
+            
 
             if (cart == null)
                 return NotFound();
+
+          
 
             return Ok(cart);
         }
@@ -39,29 +47,91 @@ namespace Dragza.API.Controllers
         [HttpPost("AddToCart")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartRequestDto request)
         {
+            try
+            {
+                var cart = await _context.Carts
+          .Include(c => c.Items)
+           .ThenInclude(i => i.Product)
+           .Include(c => c.Items)
+           .ThenInclude(i => i.InventoryUser)
+          .FirstOrDefaultAsync(c => c.UserId == request.UserId);
+
+                var porductpriceId = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId).FirstOrDefault().Id;
+                var porductprice = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId).FirstOrDefault();
+                if (cart == null)
+                {
+
+                    cart = new Cart { UserId = request.UserId };
+                    _context.Carts.Add(cart);
+                }
+
+                var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
+
+                if (existingItem != null)
+                {
+                    existingItem.Quantity += request.Quantity;
+                    existingItem.TotalAmount = (request.Quantity * porductprice.SalesPrice);
+                }
+                else
+                    cart.Items.Add(new CartItem
+                    {
+                        InventoryUserId = request.InventoryId,
+                        ProductId = request.ProductId,
+                        Quantity = request.Quantity,
+                        ProductPriceId = porductpriceId,
+                        TotalAmount = (request.Quantity * porductprice.SalesPrice)
+
+                    });
+
+                await _context.SaveChangesAsync();
+                return Ok(cart);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+      
+        }
+
+
+        // PUT: api/cart/updateQuantity
+        [HttpPut("UpdateCartQuantity")]
+        public async Task<IActionResult> UpdateQuantity([FromBody] UpdateCartQuantityRequestDto request)
+        {
             var cart = await _context.Carts
                 .Include(c => c.Items)
-                 .ThenInclude(i => i.Product)
-                 .Include(c => c.Items)
-                 .ThenInclude(i => i.InventoryUser)
                 .FirstOrDefaultAsync(c => c.UserId == request.UserId);
 
             if (cart == null)
+                return NotFound(new { message = "Cart not found." });
+
+            var item = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
+            if (item == null)
+                return NotFound(new { message = "Item not found in cart." });
+
+          
+            if (request.Quantity <= 0)
             {
-                cart = new Cart { UserId = request.UserId };
-                _context.Carts.Add(cart);
+                cart.Items.Remove(item);
+            }
+            else
+            {
+                item.Quantity = request.Quantity;
             }
 
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
-
-            if (existingItem != null)
-                existingItem.Quantity += request.Quantity;
-            else
-                cart.Items.Add(new CartItem { InventoryUserId=request.InventoryId, ProductId = request.ProductId, Quantity = request.Quantity });
-
             await _context.SaveChangesAsync();
-            return Ok(cart);
+
+            return Ok(new { message = "Cart updated successfully.", cart });
         }
+
+
+
+
+
+
+
+
 
         // DELETE: api/cart/remove
         [HttpPost("RemoveFromCart")]

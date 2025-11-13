@@ -27,6 +27,7 @@ public partial class ProductPrice
     public Guid InventoryUserId { get; set; }
 
     public int StockQuantity { get; set; }
+    public int MaxQuantity { get; set; }
 
     public Guid? MainCategoryId { get; set; }
     [Column("Discount Rate")]  // exact column name in SQL Server

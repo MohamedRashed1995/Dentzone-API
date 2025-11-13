@@ -1,4 +1,5 @@
-﻿using Dragza.Application.Interface;
+﻿using ClosedXML.Excel;
+using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -127,5 +128,54 @@ namespace Dragza.API.Controllers
                 return StatusCode(500, "An error occurred while retrieving prices");
             }
         }
+
+
+        //[HttpPost("upload-products")]
+        //public async Task<IActionResult> UploadProducts(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("Please upload a valid Excel file.");
+
+        //    // قراءة الملف في الذاكرة
+        //    using var stream = new MemoryStream();
+        //    await file.CopyToAsync(stream);
+        //    stream.Position = 0;
+
+        //    using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+        //    var worksheet = workbook.Worksheet(1);
+
+        //    // نحصل على عدد الصفوف
+        //    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // تخطي العنوان
+
+        //    foreach (var row in rows)
+        //    {
+        //        string productName = row.Cell(1).GetString();
+
+        //        // افتراضياً نتحقق من وجود المنتج في قاعدة البيانات
+        //        bool existsInDb = await _priceService.GetAllProductPricesAsync(
+        //            .AnyAsync(p => p.Name == productName);
+
+        //        if (!existsInDb)
+        //        {
+        //            // كتابة الخطأ في العمود السادس مثلاً
+        //            row.Cell(6).Value = $"Product '{productName}' not found in Products table";
+        //            row.Cell(6).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        }
+        //        else
+        //        {
+        //            row.Cell(6).Value = "OK";
+        //        }
+        //    }
+
+        //    // حفظ الملف المعدل في stream جديد
+        //    using var outputStream = new MemoryStream();
+        //    workbook.SaveAs(outputStream);
+        //    outputStream.Position = 0;
+
+        //    // إرجاع الملف للتحميل
+        //    return File(outputStream.ToArray(),
+        //        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //        "ProductsResult.xlsx");
+        //}
     }
 }
