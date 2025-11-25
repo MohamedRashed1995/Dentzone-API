@@ -11,5 +11,6 @@ namespace Dragza.Application.Interface
     {
         Task<Order> GetByIdWithItemsAsync(Guid id);
         Task<List<Guid>> GetCompletedOrderIdsAsync();
+        Task<(bool Success, string Message)> CreateOrderById(string userId);
     }
 }

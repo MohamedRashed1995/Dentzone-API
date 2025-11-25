@@ -10,5 +10,6 @@ namespace Dragza.Application.Interface
     public interface ICategoryRepository : IRepository<Category>
     {
         Task<IEnumerable<Category>> GetAllWithProductsAsync();
+        Task<Category> GetByName(string name);
     }
 }

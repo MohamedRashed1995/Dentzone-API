@@ -1,5 +1,6 @@
 ﻿using Dragza.Application.Data;
 using Dragza.Application.Interface;
+using Dragza.Domain.Enum;
 using Dragza.Domain.Models;
 using Google;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -15,6 +17,138 @@ namespace Dragza.Infrastructure.Services
     public class OrderRepository : Repository<Order>, IOrderRepository
     {
         public OrderRepository(DragzaContext context) : base(context) { }
+
+        public async Task<(bool Success, string Message)> CreateOrderById(string userId)
+        {
+            try
+            {
+                var failedInventory = new List<string>();
+                decimal? total = 0;
+
+
+                var cart = await _context.Carts
+               .Include(c => c.Items)
+               .ThenInclude(i => i.ProductPrice)
+                 .Include(c => c.Items)
+               .ThenInclude(i => i.InventoryUser)
+               .FirstOrDefaultAsync(c => c.UserId == userId);
+
+
+
+                if (cart != null)
+                {
+                    var groups = cart.Items.GroupBy(i => i.InventoryUserId);
+
+
+                    foreach (var group in groups)
+                    {
+                        var warehouseId = group.Key;
+                        var checkMinOrder = _context.Users.Where(a=>a.Id==warehouseId).FirstOrDefault().MinOrder;
+                        var totalAmount = (decimal)group.Sum(i => i.Quantity * i.ProductPrice.SalesPrice);
+                        if (totalAmount >= checkMinOrder) {
+                            var order = new Order
+                            {
+                                Id = Guid.NewGuid(),
+                                PharmacyUserId = Guid.Parse(userId),
+                                InventoryUserId = warehouseId,
+                                OrderDate = DateTime.Now,
+                                Status = (int)OrderStatus.Pending,
+                                TotalAmount = (decimal)group.Sum(i => i.Quantity * i.ProductPrice.SalesPrice),
+                                OrderNumber = Guid.NewGuid().ToString().Substring(0, 8)
+                            };
+
+                            _context.Orders.Add(order);
+                            await _context.SaveChangesAsync();
+
+                            foreach (var item in group)
+                            {
+                                var orderItem = new OrderItem
+                                {
+                                    Id = Guid.NewGuid(),
+                                    OrderId = order.Id,
+                                    ProductId = item.ProductId,
+                                    ProductPriceId = item.ProductPriceId,
+                                    Quantity = item.Quantity,
+                                    Amount = (decimal)(item.Quantity * item.ProductPrice.SalesPrice),
+                                    InventoryId = warehouseId
+                                };
+
+                                _context.OrderItems.Add(orderItem);
+                                await _context.SaveChangesAsync();
+
+                            }
+                            var myCart = cart.Items.Where(a => a.InventoryUserId == warehouseId).ToList();
+                            _context.CartItems.RemoveRange(myCart);
+                            await _context.SaveChangesAsync();
+
+                        }
+                        else
+                        {
+
+                            failedInventory.Add(
+                                   $"المخزن {cart.Items.Where(a=>a.InventoryUserId==warehouseId).FirstOrDefault().InventoryUser.BussinesName}: الحد الأدنى {checkMinOrder} — المجموع {totalAmount}");
+                            continue;  // كمل على باقي المخازن
+
+
+                           
+                        }
+
+
+
+
+
+                    }
+
+                    // _context.CartItems.RemoveRange(cart.Items);
+                    if (cart.Items.Count == 0)
+                    {
+                        _context.Carts.Remove(cart);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        foreach (var itm in cart.Items)
+                        {
+                            total += itm.TotalAmount;
+                        }
+                        cart.TotalAmountCart = (double)total;
+                        await _context.SaveChangesAsync();
+
+                    }
+
+                    // تجهيز الرسالة النهائية
+                    if (failedInventory.Any())
+                    {
+                        var message = "تم إنشاء الطلبات بنجاح لبعض المخازن." +
+                           Environment.NewLine +
+                           "لم يتم إنشاء طلب للمخازن التالية:" +
+                           Environment.NewLine +
+                           string.Join(Environment.NewLine, failedInventory);
+
+
+                        return (true, message);
+                    }
+                    else
+                    {
+                        return (true, "تم إنشاء جميع الطلبات بنجاح.");
+                    }
+
+                }
+                else
+                {
+                    return (false, "Cart not found");
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+
+            }
+                      
+
+
+        }
 
         public async Task<Order> GetByIdWithItemsAsync(Guid id)
         {

@@ -155,10 +155,6 @@ namespace Dragza.Infrastructure.Services
                 .Where(pp => includeDeleted || pp.IsDeleted != true);
 
             
-               
-              
-                
-
 
                 if (!string.IsNullOrEmpty(search))
                 {
@@ -166,25 +162,47 @@ namespace Dragza.Infrastructure.Services
                         pp.Product.Name.Contains(search) ||
                         pp.Product.ArabicName.Contains(search) ||
                         pp.Product.Description.Contains(search));
-                    query = query.Skip((page - 1) * size).Take(size);
+                 
+                 }
 
+            query = query.OrderByDescending(pp => pp.DiscountRate);
 
-            }
+            query = query.Skip((page - 1) * size).Take(size);
+            return await query.ToListAsync();
 
-                return await query
-                    .OrderBy(pp => pp.Product.Name)
-                    .ThenByDescending(pp => pp.CreationDate)
-                    .ToListAsync();
-          
-        
+            //return await query
+            //        .OrderBy(pp => pp.Product.Name)
+            //        .ThenByDescending(a=>a.DiscountRate)
+            //        .ToListAsync();
 
+        }
 
+        public async Task<List<ProductPrice>> GetProductByCategory(Guid categoryId)
+        {
+            var productPricesData = await _context.ProductPrices
+                   .Include(pp => pp.Product)
+                   .Include(pp => pp.InventoryUser)
+                   .Where(pp => pp.IsDeleted != true &&pp.Product.CategoryId==categoryId)
 
+                   .ToListAsync();
 
+            return productPricesData;
 
+         
+        }
 
-
-           
-		}
-	}
+        public async Task<IEnumerable<ProductPrice>> GetAllProductAsync(Guid productId)
+        {
+            var query = _context.ProductPrices
+                .Include(pp => pp.Product)
+                    .ThenInclude(p => p.Category)
+                .Include(pp => pp.Product)
+                    .ThenInclude(p => p.ActiveIngerdient)
+                .Include(pp => pp.Category)
+                .Include(pp => pp.InventoryUser)
+                .Include(pp => pp.MainCategory)
+                .Where(pp =>pp.IsDeleted != true&&pp.ProductId==productId);
+            return query.ToList();
+        }
+    }
 }

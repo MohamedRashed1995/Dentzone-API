@@ -11,10 +11,7 @@ namespace Dragza.Domain.Models
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;
-      
-
-
-
+        public double TotalAmountCart { get; set; }
         public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
     }
 }

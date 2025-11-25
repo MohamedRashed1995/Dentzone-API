@@ -13,15 +13,17 @@ namespace Dragza.Application.Interface
         Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto);
         Task<ProductResponseDto> GetProductByIdAsync(Guid id);
         Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
+        Task<IEnumerable<ProductsDto>> GetProductsAsync(string name);
         Task<ProductResponseDto> UpdateProductAsync(Guid id, UpdateProductDto dto);
         Task SoftDeleteProductAsync(Guid id);
         Task RestoreProductAsync(Guid id);
         Task<IEnumerable<ProductResponseDto>> GetProductsByActiveIngredientAsync(Guid activeIngredientId);
         Task<IEnumerable<BestSellerProductDto>> GetBestSellingProductsAsync(int topN = 10);
-        Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId);
+        Task<IEnumerable<ProductBestPriceDto>> GetProductsByCategoryAsync(Guid categoryId);
 
         Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId);
         Task<Product>GetproductbyName(string name);
+        Task<Product>AddProduct(ProductAddDto productDto);
 
     }
 }

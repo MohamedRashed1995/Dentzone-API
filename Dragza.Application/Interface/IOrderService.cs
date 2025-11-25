@@ -12,6 +12,7 @@ namespace Dragza.Application.Interface
     public interface IOrderService
     {
         Task<OrderDto> CreateOrderAsync(CreateOrderDto dto, Guid pharmacyUserId);
+        Task<(bool Success, string Message)> CreateOrderByIdAsync(string userId);
         Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, Guid userId);
         Task<OrderDto> GetOrderByIdAsync(Guid orderId);
         Task<List<OrderDto>> GetUserOrdersAsync(Guid userId);

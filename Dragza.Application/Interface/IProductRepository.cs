@@ -1,4 +1,5 @@
-﻿using Dragza.Domain.Models;
+﻿using Dragza.Domain.DTO;
+using Dragza.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +14,11 @@ namespace Dragza.Application.Interface
         Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
         Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId);
         Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId);
+        Task<IEnumerable<Product>> GetProductsAsync(string name);
         Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId);
         Task<List<Product>> GetPricesWithAllProductByInventoryId(Guid inventoryId);
         Task<Product> GetProductByName(string name);
+        Task<Product> AddProduct(Product product);
 
 
     }

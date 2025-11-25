@@ -44,6 +44,8 @@ namespace Dragza.Application.Mapping
             // Product mappings
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+            CreateMap<Product, ProductAddDto>().ReverseMap();
+           
             CreateMap<CreateProductDto, Product>();
 
             // ProductPrice mappings
@@ -173,7 +175,26 @@ namespace Dragza.Application.Mapping
             .ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate))
             .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.DiscountRate))
             .ForMember(dest=>dest.Quantity,op=>op.MapFrom(src=>src.StockQuantity)).ReverseMap();
-            
+
+
+
+            CreateMap<Product, ProductBestPriceDto>()
+          .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
+          .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
+          .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.ArabicName))
+          .ForMember(dest => dest.BestSalesPrice, opt => opt.MapFrom(src => src.ProductPrices.FirstOrDefault().SalesPrice))
+          .ForMember(dest => dest.PriceId, opt => opt.MapFrom(src => src.ProductPrices))
+       
+          .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.ProductPrices.FirstOrDefault().DiscountRate))
+          .ForMember(dest => dest.Quantity, op => op.MapFrom(src => src.ProductPrices.FirstOrDefault().StockQuantity)).ReverseMap();
+
+
+
+            CreateMap<Product, ProductsDto>()
+                .ForMember(des => des.EnName, opt => opt.MapFrom(src => src.Name))
+                .ForMember(des=>des.ArName,opt=>opt.MapFrom(src=>src.ArabicName)).ReverseMap();
+
+
 
             CreateMap<CreateProductPriceDto, ProductPrice>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))

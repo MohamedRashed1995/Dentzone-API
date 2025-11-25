@@ -26,5 +26,11 @@ namespace Dragza.Infrastructure.Services
                 .Include(c => c.Products)
                 .ToListAsync();
         }
+
+        public async Task<Category> GetByName(string name)
+        {
+            var category =  await _context.Categories.Where(a => a.ArabicName == name || a.Name == name).FirstOrDefaultAsync();
+            return  category;
+        }
     }
 }

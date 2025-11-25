@@ -15,5 +15,6 @@ namespace Dragza.Domain.DTO
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string? ArabicName { get; set; }
+        public Guid? ActiveIngerdientId { get; set; }
     }
 }

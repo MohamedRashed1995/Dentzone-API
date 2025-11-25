@@ -6,6 +6,7 @@ using Dragza.Domain.Models;
 using Dragza.Infrastructure.Helper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -726,6 +727,16 @@ namespace Dragza.Infrastructure.Services
                                           .ThenInclude(oi => oi.ProductPrice)
                         );
             return _mapper.Map<List<OrderDto>>(orders);
+        }
+
+        public async Task<(bool Success, string Message)> CreateOrderByIdAsync(string userId)
+        {
+            var orderStatus = await _unitOfWork.OrderRepository.CreateOrderById(userId);
+            if (orderStatus.Success)
+            {
+                return (orderStatus.Success,orderStatus.Message);
+            }
+            return (false, orderStatus.Message);
         }
     }
 }

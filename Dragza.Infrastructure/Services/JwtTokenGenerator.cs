@@ -43,7 +43,7 @@ namespace Dragza.Infrastructure.Services
                 issuer: _jwtSettings["Issuer"],
                 audience: _jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_jwtSettings["ExpiryMinutes"])),
+                expires: DateTime.UtcNow.AddDays(30),  /* DateTime.UtcNow.AddMinutes(Convert.ToInt32(_jwtSettings["ExpiryMinutes"])),*/
                 signingCredentials: credentials
             );
 

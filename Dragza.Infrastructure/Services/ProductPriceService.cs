@@ -4,6 +4,7 @@ using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -118,6 +119,7 @@ namespace Dragza.Infrastructure.Services
                     productPrice.StockQuantity = quantity;
                     productPrice.MaxQuantity = maxQuantity;
                     productPrice.UpdatedDate = DateTime.UtcNow;
+
                 }
             }
             else
@@ -129,6 +131,7 @@ namespace Dragza.Infrastructure.Services
                 if (product != null)
                 {
                     // Create new
+                    
                     var productPrice = new ProductPrice
                     {
                         Id = productPriceId,
@@ -138,7 +141,9 @@ namespace Dragza.Infrastructure.Services
                         StockQuantity = quantity,
                         CreationDate = DateTime.UtcNow,
                         IsDeleted = false,
-                        InventoryUserId = userId
+                        InventoryUserId = userId,
+                       
+                        
                     };
                     await _unitOfWork.ProductPriceRepository.AddAsync(productPrice);
                 }
@@ -152,5 +157,17 @@ namespace Dragza.Infrastructure.Services
 			var productPrices = await _unitOfWork.ProductPriceRepository.GetAllProductPricesWithDetailsAsync(includeDeleted, search,page,size);
 			return _mapper.Map<List<ProductPriceResponseDto>>(productPrices);
 		}
-	}
+
+        public async Task<IEnumerable<ProductBestPriceDto>> GetProductByCategoryAsync(Guid categoryId)
+        {
+            var productPrices = await _unitOfWork.ProductPriceRepository.GetProductByCategory(categoryId);
+            return _mapper.Map<List<ProductBestPriceDto>>(productPrices);
+        }
+
+        public async Task<IEnumerable<ProductPriceResponseDto>> GetAllProductAsync(Guid productId)
+        {
+            var productPrices = await _unitOfWork.ProductPriceRepository.GetAllProductAsync(productId);
+            return _mapper.Map<List<ProductPriceResponseDto>>(productPrices);
+        }
+    }
 }

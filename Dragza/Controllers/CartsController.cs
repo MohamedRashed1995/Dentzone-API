@@ -1,5 +1,6 @@
 ﻿using Dragza.Application.Data;
 using Dragza.Domain.DTO;
+using Dragza.Domain.DTO.Order;
 using Dragza.Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,23 +25,28 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetCart(string userId)
         {
             var cart = await _context.Carts
-              
                 .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
                     .Include(c => c.Items)
                 .ThenInclude(i => i.ProductPrice)
+                .ThenInclude(a=>a.InventoryUser)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
-
-
-            
-
             if (cart == null)
-                return NotFound();
+            {
+               
+                return Ok(new List<OrderItemDto>());
+            }
+            else
+            {
+                cart.Items = cart.Items
+                   .OrderBy(i => i.ProductPrice.InventoryUserId)
+                   .ThenBy(i => i.ProductId)
+                   .ToList();
+            }
 
-          
 
-            return Ok(cart);
+                return Ok(cart);
         }
 
         // POST: api/cart/add
@@ -49,15 +55,18 @@ namespace Dragza.API.Controllers
         {
             try
             {
+                double total = 0;
+
                 var cart = await _context.Carts
           .Include(c => c.Items)
            .ThenInclude(i => i.Product)
            .Include(c => c.Items)
            .ThenInclude(i => i.InventoryUser)
+
           .FirstOrDefaultAsync(c => c.UserId == request.UserId);
 
-                var porductpriceId = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId).FirstOrDefault().Id;
-                var porductprice = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId).FirstOrDefault();
+                var porductpriceId = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId&&a.ProductId==request.ProductId).FirstOrDefault().Id;
+                var porductprice =   _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId && a.ProductId == request.ProductId).FirstOrDefault();
                 if (cart == null)
                 {
 
@@ -65,7 +74,7 @@ namespace Dragza.API.Controllers
                     _context.Carts.Add(cart);
                 }
 
-                var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
+                var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId &&i.InventoryUserId==request.InventoryId);
 
                 if (existingItem != null)
                 {
@@ -82,7 +91,11 @@ namespace Dragza.API.Controllers
                         TotalAmount = (request.Quantity * porductprice.SalesPrice)
 
                     });
+                foreach (var item in cart.Items) {
+                    total += (double)item.TotalAmount;
+                }
 
+                cart.TotalAmountCart = total;
                 await _context.SaveChangesAsync();
                 return Ok(cart);
             }
@@ -99,14 +112,21 @@ namespace Dragza.API.Controllers
         [HttpPut("UpdateCartQuantity")]
         public async Task<IActionResult> UpdateQuantity([FromBody] UpdateCartQuantityRequestDto request)
         {
+            double total = 0;
+
             var cart = await _context.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == request.UserId);
+         .Include(c => c.Items)
+          .ThenInclude(i => i.Product)
+          .Include(c => c.Items)
+          .ThenInclude(i => i.InventoryUser)
+         .FirstOrDefaultAsync(c => c.UserId == request.UserId);
+            var porductpriceId = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId && a.ProductId == request.ProductId).FirstOrDefault().Id;
+            var porductprice = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId && a.ProductId == request.ProductId).FirstOrDefault();
 
             if (cart == null)
                 return NotFound(new { message = "Cart not found." });
 
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
+            var item = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId&&i.InventoryUserId==request.InventoryId);
             if (item == null)
                 return NotFound(new { message = "Item not found in cart." });
 
@@ -118,7 +138,15 @@ namespace Dragza.API.Controllers
             else
             {
                 item.Quantity = request.Quantity;
+                item.TotalAmount = (request.Quantity * porductprice.SalesPrice);
             }
+
+            foreach (var itm in cart.Items)
+            {
+                total += (double)itm.TotalAmount;
+            }
+
+            cart.TotalAmountCart = total;
 
             await _context.SaveChangesAsync();
 
@@ -126,17 +154,11 @@ namespace Dragza.API.Controllers
         }
 
 
-
-
-
-
-
-
-
         // DELETE: api/cart/remove
         [HttpPost("RemoveFromCart")]
         public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequestDto request)
         {
+            decimal? total = 0;
             var cart = await _context.Carts
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.UserId == request.UserId);
@@ -149,8 +171,13 @@ namespace Dragza.API.Controllers
                 return NotFound();
 
             cart.Items.Remove(item);
+          
+            foreach (var itm in cart.Items)
+            {
+                total += itm.TotalAmount;
+            }
+            cart.TotalAmountCart = (double)total;
             await _context.SaveChangesAsync();
-
             return Ok(cart);
         }
 

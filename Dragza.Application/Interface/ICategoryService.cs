@@ -1,4 +1,5 @@
 ﻿using Dragza.Domain.DTO;
+using Dragza.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Dragza.Application.Interface
     {
         Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync();
         Task<CategoryDto> GetCategoryByIdAsync(Guid id);
+        Task<Category> GetCategoryByNameAsync(string name);
         Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto categoryDto);
         Task UpdateCategoryAsync(Guid id, CreateCategoryDto categoryDto);
         Task DeleteCategoryAsync(Guid id);

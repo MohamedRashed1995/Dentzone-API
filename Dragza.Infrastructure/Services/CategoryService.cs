@@ -92,6 +92,12 @@ namespace Dragza.Infrastructure.Services
             }
         }
 
+        public Task<Category> GetCategoryByNameAsync(string name)
+        {
+            var category = _unitOfWork.CategoryRepository.GetByName(name);
+            return category;
+        }
+
         // Implement other methods similarly
     }
 }

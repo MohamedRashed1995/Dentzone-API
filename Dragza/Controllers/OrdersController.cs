@@ -25,11 +25,15 @@ namespace Dragza.API.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
+        public async Task<IActionResult> CreateOrder(string userIID)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.CreateOrderAsync(dto, userId);
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+            var order = await _orderService.CreateOrderByIdAsync(userIID);
+            return Ok(new
+            {
+                message = order.Message
+
+            });
         }
 
         [HttpPut("approve/{orderId}")]

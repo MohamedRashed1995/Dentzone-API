@@ -9,5 +9,6 @@ namespace Dragza.Application.Interface
 {
     public interface IActiveIngredientRepository : IRepository<ActiveIngredient>
     {
+        Task<ActiveIngredient> GetByName(string name);
     }
 }

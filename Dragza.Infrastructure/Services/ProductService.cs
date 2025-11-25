@@ -155,10 +155,10 @@ namespace Dragza.Infrastructure.Services
             //return _mapper.Map<IEnumerable<BestSellerProductDto>>(bestSellers);
         }
 
-        public async Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(Guid categoryId)
+        public async Task<IEnumerable<ProductBestPriceDto>> GetProductsByCategoryAsync(Guid categoryId)
         {
             var products = await _unitOfWork.ProductRepository.GetProductsByCategoryIdAsync(categoryId);
-            return _mapper.Map<IEnumerable<ProductResponseDto>>(products);
+            return _mapper.Map<IEnumerable<ProductBestPriceDto>>(products);
         }
 
         public async Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId)
@@ -173,6 +173,24 @@ namespace Dragza.Infrastructure.Services
         {
             return await _unitOfWork.ProductRepository.GetProductByName(name);
             
+        }
+
+        public async Task<IEnumerable<ProductsDto>> GetProductsAsync(string name)
+        {
+            var products = await _unitOfWork.ProductRepository.GetProductsAsync(name);
+            var productdto = _mapper.Map<List<ProductsDto>>(products); // This line now works correctly
+
+            return productdto;
+        }
+
+        public Task<Product> AddProduct(ProductAddDto productDto)
+        {
+            var product1 = _mapper.Map<Product>(productDto);
+
+            var product =_unitOfWork.ProductRepository.AddProduct(product1);
+
+            return product;
+           
         }
     }
 }

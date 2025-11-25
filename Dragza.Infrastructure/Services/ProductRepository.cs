@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Dragza.Application.Data;
 using Dragza.Application.Interface;
+using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
 using Google;
 using Microsoft.EntityFrameworkCore;
@@ -14,9 +15,10 @@ namespace Dragza.Infrastructure.Services
 {
     public class ProductRepository : Repository<Product>, IProductRepository
     {
-        private readonly IMapper _mapper;
+        
         public ProductRepository(DragzaContext context ) : base(context) 
         {
+           
         }
 
         public async Task<Product> GetProductWithDetailsAsync(Guid id)
@@ -84,7 +86,7 @@ namespace Dragza.Infrastructure.Services
                 .Include(p => p.Category)
                 .Include(p => p.ActiveIngerdient)
                 .Include(a=>a.ProductPrices)
-                .Where(p => p.CategoryId == categoryId && (p.IsDeleted == null || p.IsDeleted == false))
+                .Where(p => p.CategoryId == categoryId && (p.IsDeleted == null || p.IsDeleted == false) &&p.ProductPrices.Count!=0)
                 .ToListAsync();
         }
         public IQueryable<BestSellerProduct> GetBestSellingProductsQuery(List<Guid> orderIds)
@@ -133,6 +135,41 @@ namespace Dragza.Infrastructure.Services
               
 
             return product;
+        }
+
+        public async Task<IEnumerable<Product>> GetProductsAsync(string name)
+        {
+            try
+            {
+                var products = await _context.Products.Include(a => a.ProductPrices)
+               .Where(a => a.Name.Contains(name) || a.ArabicName.Contains(name)).ToListAsync();
+
+                products = products.Where(a => a.ProductPrices.Count > 0).ToList();
+ 
+                return products;
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+         
+        }
+
+        public async Task<Product> AddProduct(Product product)
+        {
+            try
+            {
+               
+                 _context.Products.Add(product);
+                  _context.SaveChangesAsync();
+                return product;
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
     }
 }
