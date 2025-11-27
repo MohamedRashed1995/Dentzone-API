@@ -53,43 +53,43 @@ namespace Dragza.API.Controllers
             return Ok(order);
         }
 
-        [HttpPut("{orderId}/reject")]
+        [HttpPut("reject/{orderId}")]
         [Authorize]
-        public async Task<IActionResult> RejectOrder(Guid itemId)
+        public async Task<IActionResult> RejectOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.UpdateOrderStatusAsync(itemId, OrderStatus.Rejected, userId);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, OrderStatus.Rejected, userId);
             return Ok(order);
         }
 
-        [HttpPut("{orderId}/prepare")]
+        [HttpPut("prepare/{orderId}")]
         [Authorize]
-        public async Task<IActionResult> PrepareOrder(Guid itemId)
+        public async Task<IActionResult> PrepareOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.UpdateOrderStatusAsync(itemId, OrderStatus.Prepared, userId);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, OrderStatus.Prepared, userId);
             return Ok(order);
         }
 
-        [HttpPut("{orderId}/ship")]
+        [HttpPut("ship/{orderId}")]
         [Authorize]
-        public async Task<IActionResult> ShipOrder(Guid itemId)
+        public async Task<IActionResult> ShipOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.UpdateOrderStatusAsync(itemId, OrderStatus.Shipped, userId);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, OrderStatus.Shipped, userId);
             return Ok(order);
         }
 
-        [HttpPut("{orderId}/deliver")]
+        [HttpPut("deliver/{orderId}")]
         [Authorize]
-        public async Task<IActionResult> DeliverOrder(Guid itemId)
+        public async Task<IActionResult> DeliverOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.UpdateOrderStatusAsync(itemId, OrderStatus.Delivered, userId);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, OrderStatus.Delivered, userId);
             return Ok(order);
         }
 
-        [HttpPut("{orderId}/complete")]
+        [HttpPut("complete/{orderId}")]
         [Authorize]
         public async Task<IActionResult> CompleteOrder(Guid orderId)
         {
