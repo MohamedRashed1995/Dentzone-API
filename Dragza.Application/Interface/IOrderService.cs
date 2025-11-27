@@ -15,7 +15,7 @@ namespace Dragza.Application.Interface
         Task<(bool Success, string Message)> CreateOrderByIdAsync(string userId);
         Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, Guid userId);
         Task<OrderDto> GetOrderByIdAsync(Guid orderId);
-        Task<List<OrderDto>> GetUserOrdersAsync(Guid userId);
+        Task<List<OrderDto>> GetUserOrdersAsync(Guid userId,int?status);
         Task<List<OrderDto>> GetVendorOrdersAsync(Guid vendorId);
 
         //Task ReAssignOrder(ReAssignOrder reAssignOrderDto);

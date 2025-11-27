@@ -17,6 +17,7 @@ namespace Dragza.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IBalanceService _balanceService;
         private readonly IInvoiceService _invoiceService;
+    
         private readonly ILogger<OrderService> _logger;
 
         public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IBalanceService balanceService, IInvoiceService invoiceService, ILogger<OrderService> logger)
@@ -26,6 +27,7 @@ namespace Dragza.Infrastructure.Services
             _balanceService = balanceService;
             _invoiceService = invoiceService;
             _logger = logger;
+            
         }
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto, Guid pharmacyUserId)
         {
@@ -226,15 +228,18 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<OrderDto>(order);
         }
 
-        public async Task<List<OrderDto>> GetUserOrdersAsync(Guid userId)
+        public async Task<List<OrderDto>> GetUserOrdersAsync(Guid userId, int? status)
         {
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
                 o => o.PharmacyUserId == userId,
                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .Include(o => o.OrderItems)
-                              .ThenInclude(oi => oi.ProductPrice)
-            );
+                              .ThenInclude(oi => oi.ProductPrice));
+            if (status!=null)
+            {
+                orders = orders.Where(o => o.Status == status).ToList();
+            }
             return _mapper.Map<List<OrderDto>>(orders);
         }
         public async Task<List<OrderDto>> GetAllorders()
@@ -459,13 +464,32 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<Order> CompleteOrder(Guid orderId)
         {
-            var order = await _unitOfWork.OrderRepository.GetByIdAsync(orderId);
+            var order = await _unitOfWork.OrderRepository.GetByIdWithItemsAsync(orderId);
             if (order == null) throw new KeyNotFoundException("Order not found");
 
             if (order.Status == (int)OrderStatus.Completed) return order;
 
             order.Status = (int)OrderStatus.Completed;
             order.DeliverDate = DateTime.UtcNow;
+
+            var groups = order.OrderItems.GroupBy(x => x.InventoryId);
+            foreach ( var group in groups)
+            {
+                foreach (var item in group)
+                {
+                    var productPrice = await _unitOfWork.ProductPriceRepository.GetPricesByIdAsync(item.ProductPriceId);
+                    if (productPrice != null)
+                    {
+                        productPrice.FirstOrDefault().StockQuantity -= item.Quantity;
+                        _unitOfWork.ProductPriceRepository.Update(productPrice.FirstOrDefault());
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+
+
+               
+            }
+
 
             _unitOfWork.OrderRepository.Update(order);
             await _unitOfWork.CommitAsync();

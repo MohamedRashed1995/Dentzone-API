@@ -204,5 +204,26 @@ namespace Dragza.Infrastructure.Services
                 .Where(pp =>pp.IsDeleted != true&&pp.ProductId==productId);
             return query.ToList();
         }
+
+        public async Task<IEnumerable<ProductPrice>> GetPricesByIdAsync(Guid productPriceId)
+        {
+
+
+            var result = _context.ProductPrices
+                .Where(a => a.Id == productPriceId).ToList();
+            return  result;
+
+
+           //var query = _context.ProductPrices
+           //     .Include(pp => pp.Product)
+           //         .ThenInclude(p => p.Category)
+           //     .Include(pp => pp.Product)
+           //         .ThenInclude(p => p.ActiveIngerdient)
+           //     .Include(pp => pp.Category)
+           //     .Include(pp => pp.InventoryUser)
+           //     .Include(pp => pp.MainCategory)
+           //     .Where(pp => pp.Id == productPriceId && pp.IsDeleted != true);
+           // return Task.FromResult(query.AsEnumerable());
+        }
     }
 }

@@ -126,10 +126,10 @@ namespace Dragza.API.Controllers
         }
         [HttpGet("my-orders")]
         [Authorize]
-        public async Task<IActionResult> GetUserOrders()
+        public async Task<IActionResult> GetUserOrders([FromQuery]int? status=null)
         {
             var userId = GetCurrentUserId();
-            var orders = await _orderService.GetUserOrdersAsync(userId);
+            var orders = await _orderService.GetUserOrdersAsync(userId,status);
             return Ok(orders);
         }
 
