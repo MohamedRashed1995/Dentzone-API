@@ -240,7 +240,7 @@ namespace Dragza.Infrastructure.Services
         public async Task<List<OrderDto>> GetAllorders()
         {
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
-                                x => x.InventoryUserId == null,
+                              
                                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .ThenInclude(oi => oi.ProductPrices)
@@ -409,37 +409,25 @@ namespace Dragza.Infrastructure.Services
 
         }
 
-        public async Task<OrderDto> UpdateOrderStatusAsync(Guid itemId, OrderStatus status, Guid userId)
+        public async Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, Guid userId)
         {
-            var item = await _unitOfWork.OrderItemRepository.GetAllAsync(i => i.Id == itemId ,
-                include: x => x.Include(o=> o.Order));
-            if (item == null) throw new KeyNotFoundException("item not found");
+            var order = await _unitOfWork.OrderRepository.GetByIdAsync(orderId);
+            if (order == null) throw new KeyNotFoundException("item not found");
 
             // Authorization check
             //if (order.InventoryUserId != userId)
             //    throw new UnauthorizedAccessException("Not authorized to modify this order");
 
-            if (!IsValidStatusTransition((OrderStatus)item.FirstOrDefault().Status, status))
+            if (!IsValidStatusTransition((OrderStatus)order.Status, status))
                 throw new InvalidOperationException("Invalid status transition");
 
-            item.FirstOrDefault().Status = (int)status;
+            order.Status = (int)status;
             //UpdateStatusTimestamps(order, status);
-             _unitOfWork.OrderItemRepository.Update(item.FirstOrDefault());
+             _unitOfWork.OrderRepository.Update(order);
             await _unitOfWork.SaveChangesAsync();
 
-            var order = await _unitOfWork.OrderRepository
-                .GetAllAsync(x =>
-                x.OrderNumber == item.FirstOrDefault().Order.OrderNumber
-                && x.InventoryUserId == null,
-                include: q => q.Include(o => o.OrderItems)
-                );
-            if (order == null || !order.Any())
-                throw new KeyNotFoundException("item not found");
-            var pharmacyItem = order.FirstOrDefault().OrderItems.Where(x => x.ProductPriceId == item.FirstOrDefault().ProductPriceId).FirstOrDefault();
-            pharmacyItem.Status = (int)status;
-            _unitOfWork.OrderItemRepository.Update(pharmacyItem);
-            await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<OrderDto>(item.FirstOrDefault().Order);
+           
+            return _mapper.Map<OrderDto>(order);
         }
 
         private bool IsValidStatusTransition(OrderStatus current, OrderStatus newStatus)

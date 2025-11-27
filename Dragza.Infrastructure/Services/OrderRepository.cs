@@ -33,7 +33,7 @@ namespace Dragza.Infrastructure.Services
                .ThenInclude(i => i.InventoryUser)
                .FirstOrDefaultAsync(c => c.UserId == userId);
 
-
+                var totalInventories = cart.Items.Select(i => i.InventoryUserId).Distinct().Count();
 
                 if (cart != null)
                 {
@@ -81,6 +81,26 @@ namespace Dragza.Infrastructure.Services
                             _context.CartItems.RemoveRange(myCart);
                             await _context.SaveChangesAsync();
 
+
+                            if (cart.Items.Count == 0)
+                            {
+                                _context.Carts.Remove(cart);
+                                await _context.SaveChangesAsync();
+                            }
+                            else
+                            {
+                                foreach (var itm in cart.Items)
+                                {
+                                    total += itm.TotalAmount;
+                                }
+                                cart.TotalAmountCart = (double)total;
+                                await _context.SaveChangesAsync();
+
+                            }
+
+                            
+
+
                         }
                         else
                         {
@@ -90,48 +110,41 @@ namespace Dragza.Infrastructure.Services
                             continue;  // كمل على باقي المخازن
 
 
-                           
                         }
 
 
-
+                       
 
 
                     }
+
+                    if (failedInventory.Count == totalInventories && totalInventories > 0)
+                    {
+                        return (false, "لم يصل الي الحد الادني للطلب من اي مخزن");
+                    }
+
+
+                    if (failedInventory.Any())
+                        {
+                            var message = "تم إنشاء الطلبات بنجاح لبعض المخازن." +
+                               Environment.NewLine +
+                               "لم يتم إنشاء طلب للمخازن التالية:" +
+                               Environment.NewLine +
+                               string.Join(Environment.NewLine, failedInventory);
+
+
+                            return (true, message);
+                        }
+                        else
+                        {
+                            return (true, "تم إنشاء جميع الطلبات بنجاح.");
+                        }
 
                     // _context.CartItems.RemoveRange(cart.Items);
-                    if (cart.Items.Count == 0)
-                    {
-                        _context.Carts.Remove(cart);
-                        await _context.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        foreach (var itm in cart.Items)
-                        {
-                            total += itm.TotalAmount;
-                        }
-                        cart.TotalAmountCart = (double)total;
-                        await _context.SaveChangesAsync();
-
-                    }
+                 
 
                     // تجهيز الرسالة النهائية
-                    if (failedInventory.Any())
-                    {
-                        var message = "تم إنشاء الطلبات بنجاح لبعض المخازن." +
-                           Environment.NewLine +
-                           "لم يتم إنشاء طلب للمخازن التالية:" +
-                           Environment.NewLine +
-                           string.Join(Environment.NewLine, failedInventory);
-
-
-                        return (true, message);
-                    }
-                    else
-                    {
-                        return (true, "تم إنشاء جميع الطلبات بنجاح.");
-                    }
+                  
 
                 }
                 else

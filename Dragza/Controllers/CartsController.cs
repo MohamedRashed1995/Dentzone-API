@@ -35,7 +35,12 @@ namespace Dragza.API.Controllers
             if (cart == null)
             {
                
-                return Ok(new List<OrderItemDto>());
+                return Ok(new
+                {
+                    message = "Cart is empty.",
+                    statusCode= StatusCodes.Status204NoContent
+
+                });
             }
             else
             {

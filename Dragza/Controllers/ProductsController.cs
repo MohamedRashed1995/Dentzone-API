@@ -70,6 +70,22 @@ namespace Dragza.API.Controllers
 
 			
 		}
+        [HttpGet("GetProducts")]
+        public async Task<IActionResult> GetAllProductss([FromQuery] int lang, [FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
+        {
+            var products = await _productService.GetAllProductsAsync(includeDeleted, search, page, size);
+            if (lang == 0) // Assuming 0 is for Arabic
+            {
+                foreach (var product in products)
+                {
+                    product.Name = product.Name; // Simulating language change for demonstration
+                    product.ArabicName = product.ArabicName; // Simulating language change for demonstration
+                }
+            }
+            return Ok(new {success=true, data=products });
+
+
+        }
         [HttpGet("AllProducts")]
         public async Task<IActionResult> GetAllProduct(string search)
         {

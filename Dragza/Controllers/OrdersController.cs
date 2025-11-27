@@ -29,19 +29,27 @@ namespace Dragza.API.Controllers
         {
             var userId = GetCurrentUserId();
             var order = await _orderService.CreateOrderByIdAsync(userIID);
-            return Ok(new
+            if (!order.Success)
             {
-                message = order.Message
+                return BadRequest(new { message = order.Message });
+            }
+            else
+            {
+                return Ok(new
+                {
+                    message = order.Message
 
-            });
+                });
+            }
+         
         }
 
         [HttpPut("approve/{orderId}")]
         [Authorize]
-        public async Task<IActionResult> ApproveOrder(Guid itemId)
+        public async Task<IActionResult> ApproveOrder(Guid orderId)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderService.UpdateOrderStatusAsync(itemId, OrderStatus.Approved, userId);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, OrderStatus.Approved, userId);
             return Ok(order);
         }
 
