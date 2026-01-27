@@ -19,5 +19,6 @@ namespace Dragza.Domain.DTO
 		public CategoryDto Category { get; set; }
         public ActiveIngredientDto? ActiveIngredient { get; set; }
         public List<ProductPriceResponseDto> Prices { get; set; } = new();
+        public int? ProductCode { get; set; }
     }
 }

@@ -15,6 +15,8 @@ namespace Dragza.Domain.Enum
         Shipped = 4,
         Delivered = 5,
         Completed = 6,
-        ReAssignTo=7
+        ReAssignTo=7,
+        Refund=8
+
     }
 }

@@ -35,25 +35,83 @@ namespace Dragza.Infrastructure.Services
         {
             try
             {
-               var query = _context.Products
-              .Where(p => p.IsDeleted != true)
-              .Include(p => p.Category)
-              .Include(p => p.ActiveIngerdient)
-              .Include(p => p.ProductPrices)
-                  .ThenInclude(pp => pp.InventoryUser)
-              .AsQueryable();
-                var totalrow = query.Count();
-              
-                var pages = (int)Math.Ceiling((decimal)totalrow / size);
-             
 
-                query = query.Skip((page - 1) * size).Take(size);
+                //            var data = await baseQuery
+                //.OrderByDescending(p => p.CreatedAt)
+                //.Skip((page - 1) * size)
+                //.Take(size)
+                //.Select(p => new ProductVM
+                //{
+                //    Id = p.Id,
+                //    Name = p.Name,
+                //    ArabicName = p.ArabicName,
+                //    CategoryName = p.Category.Name,
+                //    ActiveIngredient = p.ActiveIngerdient.Name,
+                //    Prices = p.ProductPrices.Select(pp => new PriceVM
+                //    {
+                //        Price = pp.Price,
+                //        InventoryUser = pp.InventoryUser.UserName
+                //    }).ToList()
+                //})
+                //.ToListAsync();
 
+
+
+
+
+
+
+                var baseQuery = _context.Products
+                    .AsNoTracking()
+                    .Where(p => p.IsDeleted != true);
 
                 if (!string.IsNullOrWhiteSpace(search))
-                    query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
+                {
+                    baseQuery = baseQuery.Where(p =>
+                        p.Name.Contains(search) ||
+                        p.ArabicName.Contains(search) ||
+                        p.ActiveIngerdient.Name.Contains(search));
+                }
 
-                return await query.ToListAsync();
+
+                var totalrow = await baseQuery.CountAsync();
+                var pages = (int)Math.Ceiling((decimal)totalrow / size);
+
+                var data = await baseQuery
+                    .OrderByDescending(p => p.CreatedAt) 
+                    .Skip((page - 1) * size)
+                    .Take(size)
+                    .Include(p => p.Category)
+                    .Include(p => p.ActiveIngerdient)
+                    .Include(p => p.ProductPrices)
+                        .ThenInclude(pp => pp.InventoryUser)
+                    .AsSplitQuery() 
+                    .ToListAsync();
+
+                return data;
+
+
+                // var query = _context.Products
+                //.Where(p => p.IsDeleted != true)
+                //.Include(p => p.Category)
+                //.Include(p => p.ActiveIngerdient)
+                //.Include(p => p.ProductPrices)
+                //    .ThenInclude(pp => pp.InventoryUser)
+                //.AsQueryable().Skip((page - 1) * size).Take(size);
+
+
+                //  var totalrow = query.Count();
+
+                //  var pages = (int)Math.Ceiling((decimal)totalrow / size);
+
+
+                //  //query = query.Skip((page - 1) * size).Take(size);
+
+
+                //  if (!string.IsNullOrWhiteSpace(search))
+                //      query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
+
+                //  return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -142,7 +200,7 @@ namespace Dragza.Infrastructure.Services
             try
             {
                 var products = await _context.Products.Include(a => a.ProductPrices)
-               .Where(a => a.Name.Contains(name) || a.ArabicName.Contains(name)).ToListAsync();
+               .Where(a => a.Name.StartsWith(name) || a.ArabicName.StartsWith(name)).ToListAsync();
 
                 products = products.Where(a => a.ProductPrices.Count > 0).ToList();
  
@@ -170,6 +228,15 @@ namespace Dragza.Infrastructure.Services
 
                 throw;
             }
+        }
+
+        public async Task<Product> GetProductByCode(int productCode)
+        {
+            var product = await _context.Products.Include(a => a.ProductPrices)
+               .Where(a=>a.ProductCode==productCode).FirstOrDefaultAsync();
+
+
+            return product;
         }
     }
 }

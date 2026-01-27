@@ -4,6 +4,7 @@ using Dragza.Application.Data;
 using Dragza.Application.Interface;
 using Dragza.Application.Mapping;
 using Dragza.Domain.DTO;
+using Dragza.Domain.Models;
 using Dragza.Infrastructure.Helper;
 using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -57,6 +58,7 @@ builder.Services.AddScoped<IGovernateService, GovernateService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IBalanceReportingService, BalanceReportingService>();
 builder.Services.AddScoped<IReturnReasonService, ReturnReasonService>();
+builder.Services.AddScoped<IRepository<Notifacation>, Repository<Notifacation>>();
 builder.Services.AddHttpContextAccessor(); // 👈 Add this line
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -192,7 +194,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 builder.Services.AddControllers();
-
+builder.Services.AddMemoryCache();
 var app = builder.Build();
 
 //if (app.Environment.IsDevelopment())

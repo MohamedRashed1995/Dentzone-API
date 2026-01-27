@@ -1,10 +1,15 @@
 ﻿using ClosedXML.Excel;
+using Dragza.Application.Data;
 using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace Dragza.API.Controllers
 {
@@ -17,14 +22,20 @@ namespace Dragza.API.Controllers
         private readonly ICategoryService _categoryService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly DragzaContext _context;
+        private readonly ILogger<ProductsController> _logger;
+        private readonly IMemoryCache _memoryCache;
 
-        public ProductsController(IProductService productService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IProductPriceService productPriceService, ICategoryService categoryService)
+        public ProductsController(IProductService productService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IProductPriceService productPriceService, ICategoryService categoryService, DragzaContext context, ILogger<ProductsController> logger, IMemoryCache memoryCache)
         {
             _productService = productService;
             _httpContextAccessor = httpContextAccessor;
             _productPriceService = productPriceService;
             _categoryService = categoryService;
             _unitOfWork = unitOfWork;
+            _context = context;
+            _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         private Guid GetCurrentUserId()
@@ -71,20 +82,77 @@ namespace Dragza.API.Controllers
 			
 		}
         [HttpGet("GetProducts")]
-        public async Task<IActionResult> GetAllProductss([FromQuery] int lang, [FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
+        public async Task<IActionResult> GetAllProductss(
+    [FromQuery] int lang,
+    [FromQuery] bool includeDeleted = false,
+    [FromQuery] string search = null,
+    int page = 1,
+    int size = 10)
         {
-            var products = await _productService.GetAllProductsAsync(includeDeleted, search, page, size);
-            if (lang == 0) // Assuming 0 is for Arabic
+
+            var PDS = await _unitOfWork.ProductRepository.GetAllAsync();
+
+            var s= PDS.Where(a => a.ProductCode == null).ToList();
+
+            foreach (var prop in s)
             {
-                foreach (var product in products)
-                {
-                    product.Name = product.Name; // Simulating language change for demonstration
-                    product.ArabicName = product.ArabicName; // Simulating language change for demonstration
-                }
+                prop.ProductCode = GenerateProductCode();
+                _unitOfWork.ProductRepository.Update(prop);
+            
             }
-            return Ok(new {success=true, data=products });
+            try
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+               
+                var inner = ex.InnerException?.Message;
+                throw new Exception(inner);
+            }
 
+            var stopWatch = Stopwatch.StartNew();
+            string cacheKey = $"products_{lang}_{includeDeleted}_{search}_{page}_{size}";
 
+            if (!_memoryCache.TryGetValue(cacheKey, out object cachedResult))
+            {
+                var products = await _productService.GetAllProductsAsync(includeDeleted, search, page, size);
+                _logger.LogInformation("Cache is empty");
+                int totalCount = _context.Products.Count();
+                int totalPages = (int)Math.Ceiling((double)totalCount / size);
+
+                if (lang == 0) // Arabic
+                {
+                    foreach (var product in products)
+                    {
+                        product.Name = product.Name;
+                        product.ArabicName = product.ArabicName;
+                    }
+                }
+
+                cachedResult = new
+                {
+                    success = true,
+                    data = products,
+                    totalPages = totalPages,
+                    totalItems = totalCount
+                };
+
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(1))   // يتجدد مع الاستخدام
+                    //.SetAbsoluteExpiration(TimeSpan.FromMinutes(30)) // أقصى مدة
+                    .SetPriority(CacheItemPriority.High);
+
+                _memoryCache.Set(cacheKey, cachedResult, cacheOptions);
+                _logger.LogInformation("Data cached successfully");
+            }
+            else {
+                _logger.LogInformation("Data retrieved from cache");
+
+            }
+            stopWatch.Stop();
+            _logger.LogInformation("GetAllProducts executed in {ElapsedMilliseconds} ms", stopWatch.ElapsedMilliseconds);
+            return Ok(cachedResult);
         }
         [HttpGet("AllProducts")]
         public async Task<IActionResult> GetAllProduct(string search)
@@ -270,7 +338,7 @@ namespace Dragza.API.Controllers
                 //var stockQuantity = row.Cell(4).GetValue<int>();
                 //var maxQuantity = row.Cell(5).GetValue<int>();
 
-                await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity, quantity,userId);
+              //  await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity, quantity,userId);
             }
 
             return Ok("Products updated successfully.");
@@ -341,24 +409,25 @@ namespace Dragza.API.Controllers
                 string errorMessage = "";
 
                 var productName = row.Cell(1).GetString().Trim();
+                var ProductCode = row.Cell(6).GetValue<int>();
                 if (string.IsNullOrWhiteSpace(productName))
                     continue;
 
-                var product = await _productService.GetproductbyName(productName);
+                var product = await _productService.GetproductbyCode(ProductCode);
 
                 if (product == null)
                 {
                     errorMessage = $"Product '{productName}' not found in Products table";
                     row.Cell(7).Value = errorMessage;
                     row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                    continue;
+                  
                 }
                 else
                 {
                     errorMessage = $"Product '{productName}' Is ALready Exist";
                     row.Cell(7).Value = errorMessage;
                     row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                    continue;
+                 
                 }
 
                     var productPrice = product.ProductPrices
@@ -369,14 +438,14 @@ namespace Dragza.API.Controllers
                     errorMessage = $"Price row for '{productName}' not found";
                     row.Cell(7).Value = errorMessage;
                     row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                    continue;
+                  
                 }
                 else
                 {
                     errorMessage = $"Price row for '{productName}' is Already Exist";
                     row.Cell(7).Value = errorMessage;
                     row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                    continue;
+                  
                 }
 
                     try
@@ -385,16 +454,19 @@ namespace Dragza.API.Controllers
                         var discountRate = row.Cell(3).GetValue<decimal>();
                         var stockQuantity = row.Cell(4).GetValue<int>();
                         var maxQuantity = row.Cell(5).GetValue<int>();
-                        var purchasePrice = row.Cell(6).GetValue<int>();
+                        //var ProductCode = row.Cell(6).GetValue<int>();
+                    // var purchasePrice = row.Cell(6).GetValue<int>();
+                    var purchasePrice = salesPrice - (salesPrice * (decimal)(discountRate / 100));
 
-                        await _productPriceService.UpdateProductPriceAndQuantityAsync(
+                    await _productPriceService.UpdateProductPriceAndQuantityAsync(
                             product.Id,
-                            productPrice.Id,
+                           productPrice?.Id,
                             salesPrice,
                             purchasePrice,
                             stockQuantity,
                             maxQuantity,
-                            userId
+                            userId,
+                            discountRate
                         );
                     }
                     catch (Exception ex)
@@ -420,20 +492,24 @@ namespace Dragza.API.Controllers
                 "ProcessedProducts.xlsx"
             );
         }
+        public static int GenerateProductCode()
+        {
+            return RandomNumberGenerator
+                .GetInt32(10000000, 99999999);
 
+        }
 
         [HttpPost("AddProduct")]
         public async Task<IActionResult> AddProduct(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
+           
 
             //  var userId = GetCurrentUserId();
             List<ProductAddDto> productDtos = new List<ProductAddDto>();
 
-
-
-
+          
 
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);

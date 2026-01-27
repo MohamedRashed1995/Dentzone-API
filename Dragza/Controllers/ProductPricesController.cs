@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Dragza.API.Controllers
@@ -16,13 +18,19 @@ namespace Dragza.API.Controllers
     {
         private readonly IProductPriceService _priceService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<ProductPricesController> _logger;
+        private readonly IMemoryCache _memoryCache;
 
         public ProductPricesController(
             IProductPriceService priceService,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<ProductPricesController> logger,
+            IMemoryCache memoryCache)
         {
             _priceService = priceService;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         //[HttpGet("{id}")]
@@ -67,8 +75,30 @@ namespace Dragza.API.Controllers
         [HttpGet("best-prices-bysorting")]
         public async Task<IActionResult> GetProductsBestPricesbysorting(int sort, int page = 1, int size = 10)
         {
-            var bestPrices = await _priceService.GetProductsBestPricesSortingAsync(sort,page,size);
-            return Ok(bestPrices);
+            var stopWatch = Stopwatch.StartNew();
+            string cacheKey = $"productsWithPrice__{sort}_{page}_{size}";
+            if (!_memoryCache.TryGetValue(cacheKey, out List<ProductBestPriceDto> cachedProductPrice))
+            {
+                var bestPrices = await _priceService.GetProductsBestPricesSortingAsync(sort, page, size);
+                _logger.LogInformation("Cache is empty");
+
+                cachedProductPrice= bestPrices.ToList();
+                var cacheOptions = new MemoryCacheEntryOptions()
+                   .SetSlidingExpiration(TimeSpan.FromMinutes(2))   // يتجدد مع الاستخدام
+                   //.SetAbsoluteExpiration(TimeSpan.FromMinutes(30)) // أقصى مدة
+                   .SetPriority(CacheItemPriority.High);
+
+                _memoryCache.Set(cacheKey, cachedProductPrice, cacheOptions);
+                _logger.LogInformation("Data cached successfully");
+            }
+            else
+            {
+                   _logger.LogInformation("Data retrieved from cache");
+            }
+
+                stopWatch.Stop();
+            _logger.LogInformation("GetAllProducts executed in {ElapsedMilliseconds} ms", stopWatch.ElapsedMilliseconds);
+            return Ok(cachedProductPrice);
         }
 
         [HttpGet("by-category/{categoryId}")]

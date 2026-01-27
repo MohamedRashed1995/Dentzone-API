@@ -1,4 +1,5 @@
 ﻿using Dragza.Domain.Enum;
+using Dragza.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,8 @@ namespace Dragza.Domain.DTO.ReturnOrder
         public ReturnOrderStatus Status { get; set; }
         public decimal TotalReturnValue { get; set; }
         public string? ReturnOrderNumber { get; set; }
-
+        public Guid? InventoryUserId { get; set; }
+        public virtual User? InventoryUser { get; set; }
         public List<ReturnedItemDto> Items { get; set; } = new();
     }
 }

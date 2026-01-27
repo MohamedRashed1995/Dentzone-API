@@ -48,4 +48,5 @@ public partial class Product
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
 
     public virtual ICollection<ReturnedItem> ReturnedItems { get; set; } = new List<ReturnedItem>();
+    public int? ProductCode { get; set; }
 }

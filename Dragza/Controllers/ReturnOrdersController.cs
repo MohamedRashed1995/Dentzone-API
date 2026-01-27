@@ -28,6 +28,10 @@ namespace Dragza.API.Controllers
         {
             var userId = GetCurrentUserId();
             var result = await _returnService.CreateReturnAsync(dto, userId);
+            if (result == null)
+            {
+                return BadRequest("Unable to create return order.");
+            }
             return CreatedAtAction(nameof(GetReturn), new { id = result.Id }, result);
         }
 

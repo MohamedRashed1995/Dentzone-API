@@ -21,7 +21,7 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<ActiveIngredient> GetByName(string name)
         {
-            var active = await _context.ActiveIngredients.Where(a => a.Name.Contains(name)).FirstOrDefaultAsync();
+            var active = await _context.ActiveIngredients.Where(a => EF.Functions.Like(a.Name,name)).FirstOrDefaultAsync();
             return active;
         }
     }

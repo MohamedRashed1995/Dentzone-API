@@ -1,4 +1,6 @@
 ﻿using Dragza.Domain.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,11 @@ namespace Dragza.Application.Interface
         Task<IEnumerable<ReturnOrder>> GetByInventoryUserAsync(Guid inventoryUserId);
 
         Task<IEnumerable<ReturnOrder>> GetAllWithDetailsAsync();
-        Task<ReturnOrder?> GetByIdWithDetailsAsync(Guid id);    
+        Task<ReturnOrder?> GetByIdWithDetailsAsync(Guid id);
+        Task<ReturnOrder?> GetByIdIncludeAsync(
+    Guid id,
+    Func<IQueryable<ReturnOrder>, IIncludableQueryable<ReturnOrder, object>> include = null);
+
+
     }
 }

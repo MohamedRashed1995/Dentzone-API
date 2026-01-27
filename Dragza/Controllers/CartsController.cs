@@ -1,4 +1,5 @@
-﻿using Dragza.Application.Data;
+﻿using AutoMapper;
+using Dragza.Application.Data;
 using Dragza.Domain.DTO;
 using Dragza.Domain.DTO.Order;
 using Dragza.Domain.Models;
@@ -13,10 +14,12 @@ namespace Dragza.API.Controllers
     public class CartsController : ControllerBase
     {
         private readonly DragzaContext _context;
+        private readonly IMapper _mapper;
 
-        public CartsController(DragzaContext context)
+        public CartsController(DragzaContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
 
@@ -31,6 +34,10 @@ namespace Dragza.API.Controllers
                 .ThenInclude(i => i.ProductPrice)
                 .ThenInclude(a=>a.InventoryUser)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+
+         
+
+          
 
             if (cart == null)
             {
@@ -48,10 +55,31 @@ namespace Dragza.API.Controllers
                    .OrderBy(i => i.ProductPrice.InventoryUserId)
                    .ThenBy(i => i.ProductId)
                    .ToList();
+                foreach (var item in cart.Items)
+                {
+                    item.ProductPrice.PurchasePrice=item.ProductPrice.SalesPrice-(item.ProductPrice.SalesPrice*item.ProductPrice.DiscountRate/100);
+                }
+
             }
+        
+            var cartdto = _mapper.Map<CartDto>(cart);
 
 
-                return Ok(cart);
+            foreach (var item in cartdto.Items)
+            {
+                if (item.ProductPrice.StockQuantity <= 0)
+                    item.status = 1;
+            }
+            //var totalsByInventory = cart.Items
+            //     .GroupBy(i => i.InventoryUserId)
+            //     .Select(g => new
+            //     {
+            //         InventoryUserId = g.Key,
+            //         TotalAmount = g.Sum(item =>
+            //             item.TotalAmount ?? (item.Quantity * (item.ProductPrice?.SalesPrice ?? 0)))
+            //     })
+            //     .ToList();
+            return Ok(cartdto);
         }
 
         // POST: api/cart/add
@@ -84,7 +112,7 @@ namespace Dragza.API.Controllers
                 if (existingItem != null)
                 {
                     existingItem.Quantity += request.Quantity;
-                    existingItem.TotalAmount = (request.Quantity * porductprice.SalesPrice);
+                    existingItem.TotalAmount = (request.Quantity * (porductprice.SalesPrice-(porductprice.SalesPrice*porductprice.DiscountRate/100)));
                 }
                 else
                     cart.Items.Add(new CartItem
@@ -93,7 +121,7 @@ namespace Dragza.API.Controllers
                         ProductId = request.ProductId,
                         Quantity = request.Quantity,
                         ProductPriceId = porductpriceId,
-                        TotalAmount = (request.Quantity * porductprice.SalesPrice)
+                        TotalAmount = (request.Quantity * (porductprice.SalesPrice - (porductprice.SalesPrice * porductprice.DiscountRate / 100)))
 
                     });
                 foreach (var item in cart.Items) {
@@ -143,7 +171,7 @@ namespace Dragza.API.Controllers
             else
             {
                 item.Quantity = request.Quantity;
-                item.TotalAmount = (request.Quantity * porductprice.SalesPrice);
+                item.TotalAmount = (request.Quantity * (porductprice.SalesPrice - (porductprice.SalesPrice * porductprice.DiscountRate / 100)));
             }
 
             foreach (var itm in cart.Items)

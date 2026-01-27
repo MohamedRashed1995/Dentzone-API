@@ -17,17 +17,17 @@ namespace Dragza.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IBalanceService _balanceService;
         private readonly IInvoiceService _invoiceService;
-    
+        private readonly IRepository<Notifacation> _repository;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IBalanceService balanceService, IInvoiceService invoiceService, ILogger<OrderService> logger)
+        public OrderService(IUnitOfWork unitOfWork, IMapper mapper, IBalanceService balanceService, IInvoiceService invoiceService, ILogger<OrderService> logger, IRepository<Notifacation> repository)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _balanceService = balanceService;
             _invoiceService = invoiceService;
             _logger = logger;
-            
+            _repository = repository;
         }
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto, Guid pharmacyUserId)
         {
@@ -232,7 +232,9 @@ namespace Dragza.Infrastructure.Services
         {
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
                 o => o.PharmacyUserId == userId,
-                include: q => q.Include(o => o.OrderItems)
+                include: q => 
+                q.Include(a=>a.InventoryUser)
+                .Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.ProductPrice));
@@ -240,6 +242,7 @@ namespace Dragza.Infrastructure.Services
             {
                 orders = orders.Where(o => o.Status == status).ToList();
             }
+            orders=orders.Where(a=>a.OrderItems.Count>0).ToList();
             return _mapper.Map<List<OrderDto>>(orders);
         }
         public async Task<List<OrderDto>> GetAllorders()
@@ -416,23 +419,45 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, OrderStatus status, Guid userId)
         {
-            var order = await _unitOfWork.OrderRepository.GetByIdAsync(orderId);
-            if (order == null) throw new KeyNotFoundException("item not found");
+            try
+            {
+                var order = await _unitOfWork.OrderRepository.GetByIdAsync(orderId);
+                if (order == null) throw new KeyNotFoundException("item not found");
 
-            // Authorization check
-            //if (order.InventoryUserId != userId)
-            //    throw new UnauthorizedAccessException("Not authorized to modify this order");
+                // Authorization check
+                //if (order.InventoryUserId != userId)
+                //    throw new UnauthorizedAccessException("Not authorized to modify this order");
 
-            if (!IsValidStatusTransition((OrderStatus)order.Status, status))
-                throw new InvalidOperationException("Invalid status transition");
+                if (!IsValidStatusTransition((OrderStatus)order.Status, status))
+                    throw new InvalidOperationException("Invalid status transition");
 
-            order.Status = (int)status;
-            //UpdateStatusTimestamps(order, status);
-             _unitOfWork.OrderRepository.Update(order);
-            await _unitOfWork.SaveChangesAsync();
+                order.Status = (int)status;
+                //UpdateStatusTimestamps(order, status);
+                _unitOfWork.OrderRepository.Update(order);
+                await _unitOfWork.SaveChangesAsync();
 
-           
-            return _mapper.Map<OrderDto>(order);
+                Notifacation notifacation = new Notifacation
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Order Status Updated",
+                    Status= (int)status,
+                    UserId = order.PharmacyUserId,
+                    Message = $"Your order #{order.OrderNumber} status has been updated to {status}.",
+                    CreatedAt = DateTime.UtcNow,
+
+                };
+
+                _repository.AddAsync(notifacation);
+                await _unitOfWork.SaveChangesAsync();
+
+                return _mapper.Map<OrderDto>(order);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+          
         }
 
         private bool IsValidStatusTransition(OrderStatus current, OrderStatus newStatus)
@@ -481,6 +506,10 @@ namespace Dragza.Infrastructure.Services
                     if (productPrice != null)
                     {
                         productPrice.FirstOrDefault().StockQuantity -= item.Quantity;
+                        if ((productPrice.FirstOrDefault().StockQuantity -= item.Quantity) <= 0)
+                        {
+                            productPrice.FirstOrDefault().StockQuantity = 0;
+                        }
                         _unitOfWork.ProductPriceRepository.Update(productPrice.FirstOrDefault());
                         await _unitOfWork.SaveChangesAsync();
                     }
@@ -494,6 +523,19 @@ namespace Dragza.Infrastructure.Services
             _unitOfWork.OrderRepository.Update(order);
             await _unitOfWork.CommitAsync();
 
+            Notifacation notifacation = new Notifacation
+            {
+                Id = Guid.NewGuid(),
+                Title = "Order Status Updated",
+                Status= (int)OrderStatus.Completed,
+                UserId = order.PharmacyUserId,
+                Message = $"Your order #{order.OrderNumber} status has been updated to {OrderStatus.Completed}.",
+                CreatedAt = DateTime.UtcNow,
+
+            };
+
+            _repository.AddAsync(notifacation);
+            await _unitOfWork.SaveChangesAsync();
             // Generate invoice
             await _invoiceService.GenerateInvoiceForOrderAsync(orderId);
             return order;

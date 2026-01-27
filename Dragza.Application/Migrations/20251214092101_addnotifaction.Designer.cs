@@ -4,6 +4,7 @@ using Dragza.Application.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dragza.Application.Migrations
 {
     [DbContext(typeof(DragzaContext))]
-    partial class DragzaContextModelSnapshot : ModelSnapshot
+    [Migration("20251214092101_addnotifaction")]
+    partial class addnotifaction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -799,9 +802,6 @@ namespace Dragza.Application.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("ProductCode")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");
 
@@ -812,10 +812,6 @@ namespace Dragza.Application.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("MainCategoryId");
-
-                    b.HasIndex("ProductCode")
-                        .IsUnique()
-                        .HasFilter("[ProductCode] IS NOT NULL");
 
                     b.ToTable("Product", (string)null);
                 });

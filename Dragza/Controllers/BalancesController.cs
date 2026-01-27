@@ -42,16 +42,25 @@ public class BalancesController : ControllerBase
     //[Authorize()]
     public async Task<IActionResult> DepositToCash([FromBody] UpdateBalanceRequestDto request)
     {
-        var balances = await _balanceService.GetUserBalances(request.UserId);
+        try
+        {
+            var balances = await _balanceService.GetUserBalances(request.UserId);
 
-        var transaction = await _balanceService.CreateTransaction(
-            balances.CashAccount.Id,
-            request.Amount,
-            request.UserId,
-            TransactionType.Deposit,
-            request.Description);
+            var transaction = await _balanceService.CreateTransaction(
+                balances.CashAccount.Id,
+                request.Amount,
+                request.UserId,
+                TransactionType.Deposit,
+                request.Description==null?"":request.Description);
 
-        return Ok(transaction);
+            return Ok(transaction);
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+      
     }
 
     [HttpPost("withdraw/cash")]

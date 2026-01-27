@@ -47,6 +47,13 @@ namespace Dragza.Application.Mapping
             CreateMap<Product, ProductAddDto>().ReverseMap();
            
             CreateMap<CreateProductDto, Product>();
+            CreateMap<CartDto, Cart>().ReverseMap();
+            CreateMap<CartItemDto, CartItem>().ReverseMap();
+            CreateMap<ProductPriceDto, ProductPrice>().ReverseMap();
+            CreateMap<UserDtoCart, User>().ReverseMap();
+            CreateMap<ProductDtoCart, Product>().ReverseMap();
+
+
 
             // ProductPrice mappings
             CreateMap<ProductPrice, ProductPriceResponseDto>()
@@ -66,10 +73,11 @@ namespace Dragza.Application.Mapping
                 //.ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.ProductPrice.InventoryUser.UserName))
                 .ForMember(dest => dest.InventoryName, opt => opt.MapFrom(src => src.Order.InventoryUser.BussinesName == null ? string.Empty : src.Order.InventoryUser.BussinesName))
                 .ForMember(dest => dest.InventoryUserId, opt => opt.MapFrom(src => src.Order.InventoryUser.Id))
-            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.ProductPrice.SalesPrice));
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.ProductPrice.SalesPrice-(src.ProductPrice.SalesPrice*src.ProductPrice.DiscountRate/100)));
             CreateMap<OrderItemDto, OrderItem>();
 
             CreateMap<ReturnOrder, ReturnOrderDto>()
+                .ForMember(des=>des.PharmacyName,opt=>opt.MapFrom(src=>src.PharmacyUser.BussinesName))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => (ReturnOrderStatus)src.Statuse))
             .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.ReturnedItems));
 
@@ -382,10 +390,10 @@ namespace Dragza.Application.Mapping
 			? src.PharmacyUser.BussinesName ?? string.Empty
 			: string.Empty));
 
-			CreateMap<ReturnedItem, ReturnedItemDto>()
-                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
-                .ForMember(dest => dest.ReasonName, opt => opt.MapFrom(src => src.Reason.Reason))
-			.ForMember(dest => dest.InventoryName, opt => opt.Ignore());
+            CreateMap<ReturnedItem, ReturnedItemDto>();
+   //             .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+   //             .ForMember(dest => dest.ReasonName, opt => opt.MapFrom(src => src.Reason.Reason))
+			//.ForMember(dest => dest.InventoryName, opt => opt.Ignore());
 
 			CreateMap<UpdateUserDto, User>()
      .ForMember(dest => dest.Photo, opt => opt.Ignore()) // Handled separately in controller

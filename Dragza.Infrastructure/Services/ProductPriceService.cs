@@ -105,11 +105,11 @@ namespace Dragza.Infrastructure.Services
             return _mapper.Map<IEnumerable<InventoryUserPriceDetailsDto>>(prices);
         }
 
-        public async Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid productPriceId, decimal salesPrice, decimal purchasePrice, int quantity ,int maxQuantity,Guid userId)
+        public async Task UpdateProductPriceAndQuantityAsync(Guid productId, Guid? productPriceId, decimal salesPrice, decimal purchasePrice, int quantity ,int maxQuantity,Guid userId,decimal discountRate)
             {
             if (productPriceId != Guid.Empty && productPriceId != null)
             {
-                var productPrice = await _unitOfWork.ProductPriceRepository.GetByIdAsync(productPriceId);
+                var productPrice = await _unitOfWork.ProductPriceRepository.GetByIdAsync((Guid)productPriceId);
 
                 if (productPrice != null)
                 {
@@ -119,6 +119,7 @@ namespace Dragza.Infrastructure.Services
                     productPrice.StockQuantity = quantity;
                     productPrice.MaxQuantity = maxQuantity;
                     productPrice.UpdatedDate = DateTime.UtcNow;
+                    productPrice.DiscountRate = discountRate;
 
                 }
             }
@@ -134,7 +135,7 @@ namespace Dragza.Infrastructure.Services
                     
                     var productPrice = new ProductPrice
                     {
-                        Id = productPriceId,
+                        Id = Guid.NewGuid(),
                         ProductId = productId,
                         SalesPrice = salesPrice,
                         PurchasePrice = purchasePrice,
@@ -142,6 +143,7 @@ namespace Dragza.Infrastructure.Services
                         CreationDate = DateTime.UtcNow,
                         IsDeleted = false,
                         InventoryUserId = userId,
+                        DiscountRate=discountRate
                        
                         
                     };

@@ -23,6 +23,7 @@ namespace Dragza.Application.Interface
 
         Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId);
         Task<Product>GetproductbyName(string name);
+        Task<Product>GetproductbyCode(int productCode);
         Task<Product>AddProduct(ProductAddDto productDto);
 
     }

@@ -2,9 +2,11 @@
 
 using Dragza.Application.Data;
 using Dragza.Application.Interface;
+using Dragza.Domain.DTO.ReturnOrder;
 using Dragza.Domain.Models;
 using Dragza.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace Dragaza.Infrastructure.Repositories
 {
@@ -42,8 +44,10 @@ namespace Dragaza.Infrastructure.Repositories
         public async Task<IEnumerable<ReturnOrder>> GetByInventoryUserAsync(Guid inventoryUserId)
         {
             return await _context.ReturnOrders
-                .Where(ro => ro.InventoryUserId == inventoryUserId)
+                .Include(a=>a.InventoryUser)
+              .Include(a=>a.PharmacyUser)
                 .Include(ro => ro.ReturnedItems)
+                  .Where(ro => ro.InventoryUserId == inventoryUserId)
                 .ToListAsync();
         }
 
@@ -61,7 +65,7 @@ namespace Dragaza.Infrastructure.Repositories
                     .ThenInclude(ri => ri.Reason)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.ProductPrice)
-                .Where(x => x.InventoryUserId == null || x.InventoryUserId == Guid.Empty)
+                //.Where(x => x.InventoryUserId == null || x.InventoryUserId == Guid.Empty)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -80,5 +84,20 @@ namespace Dragaza.Infrastructure.Repositories
                     .ThenInclude(ri => ri.ProductPrice)
                 .FirstOrDefaultAsync(ro => ro.Id == id);
         }
+
+
+        public async Task<ReturnOrder?> GetByIdIncludeAsync(
+    Guid id,
+    Func<IQueryable<ReturnOrder>, IIncludableQueryable<ReturnOrder, object>> include = null)
+        {
+            IQueryable<ReturnOrder> query = _context.ReturnOrders.AsQueryable();
+
+            if (include != null)
+                query = include(query);
+
+            return await query.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
+        }
+
+
     }
 }

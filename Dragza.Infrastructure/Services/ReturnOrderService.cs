@@ -38,6 +38,7 @@ namespace Dragza.Infrastructure.Services
                 //// Validate user exists
                 //var userExists = await _unitOfWork.UserRepository.ExistsAsync(order.PharmacyUserId);
                 //if (!userExists) throw new KeyNotFoundException("User not found");
+                await CreateReturnOrdersByInventoryAsync(dto, pharmacyUserId, uniqueNumber);
 
                 var returnOrder = new ReturnOrder
                 {
@@ -51,8 +52,7 @@ namespace Dragza.Infrastructure.Services
                     ReturnedItems = new List<ReturnedItem>(),
                     ReturnOrderNumber = uniqueNumber.ToString()
                 };
-
-				decimal totalValue = 0;
+                decimal totalValue = 0;
 				var orderItemsToUpdate = new List<OrderItem>();
 				var orderItemsToDelete = new List<OrderItem>(); // Track items to delete
 
@@ -61,15 +61,21 @@ namespace Dragza.Infrastructure.Services
 					var orderItem = order.OrderItems.FirstOrDefault(oi =>
 						oi.ProductId == item.ProductId &&
 						oi.ProductPriceId == item.ProductPriceId);
+                   
 
-					if (orderItem == null || item.QuantityReturned > orderItem.Quantity)
-						throw new InvalidOperationException("Invalid return quantity");
+					if (orderItem == null || (item.QuantityReturned > orderItem.Quantity))
+                    {
+                        order.Status = (int)OrderStatus.Refund;
+                        return null;
+                    }
+                      
 
-					var reason = await _unitOfWork.ReturnReasonRepository.GetByIdAsync(item.ReasonId);
+                    var reason = await _unitOfWork.ReturnReasonRepository.GetByIdAsync(item.ReasonId);
 					if (reason == null) throw new KeyNotFoundException("Invalid return reason");
 
 					decimal unitPrice = orderItem.Amount / orderItem.Quantity;
-					decimal returnAmount = item.QuantityReturned * unitPrice;
+                   var up=  Math.Round(unitPrice);
+					decimal returnAmount = item.QuantityReturned * up;
 
 					var returnedItem = new ReturnedItem
 					{
@@ -85,7 +91,7 @@ namespace Dragza.Infrastructure.Services
 					};
 
 					totalValue += returnedItem.TotalAmount;
-					returnOrder.ReturnedItems.Add(returnedItem);
+				//	returnOrder.ReturnedItems.Add(returnedItem);
 
 					// Update the order item quantities and amounts
 					orderItem.Quantity -= item.QuantityReturned;
@@ -124,13 +130,13 @@ namespace Dragza.Infrastructure.Services
 				// Update the order
 				_unitOfWork.OrderRepository.Update(order);
 
-				// Add the return order
-				await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
+                // Add the return order
+                //	await _unitOfWork.ReturnOrderRepository.AddAsync(returnOrder);
 
-				await _unitOfWork.SaveChangesAsync();
-				await transaction.CommitAsync();
+                await _unitOfWork.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-                await CreateReturnOrdersByInventoryAsync(dto, pharmacyUserId,uniqueNumber);
+              
                 return _mapper.Map<ReturnOrderDto>(returnOrder);
             }
             catch
@@ -165,7 +171,7 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<ReturnOrderDto> UpdateReturnStatusAsync(Guid returnId, UpdateReturnStatusDto dto, Guid userId)
         {
-            var returnOrder = await _unitOfWork.ReturnOrderRepository.GetByIdAsync(returnId);
+            var returnOrder = await _unitOfWork.ReturnOrderRepository.GetByIdIncludeAsync(returnId,a=>a.Include(z=>z.Order));
             if (returnOrder == null) throw new KeyNotFoundException("Return order not found");
 
             // Authorization check
@@ -197,10 +203,10 @@ namespace Dragza.Infrastructure.Services
 			foreach (var dto in dtos)
 			{
 				var returnOrder = returnOrders.First(ro => ro.Id == dto.Id);
-				foreach (var item in dto.Items)
-				{
-					item.InventoryName = returnOrder.InventoryUser?.BussinesName ?? string.Empty;
-				}
+				//foreach (var item in dto.Items)
+				//{
+				//	item.InventoryName = returnOrder.InventoryUser?.BussinesName ?? string.Empty;
+				//}
 			}
 
 			return dtos;
@@ -220,10 +226,10 @@ namespace Dragza.Infrastructure.Services
         {
             return newStatus switch
             {
-                ReturnOrderStatus.Approved => current == ReturnOrderStatus.Requested,
-                ReturnOrderStatus.Rejected => current == ReturnOrderStatus.Requested,
-                ReturnOrderStatus.Processing => current == ReturnOrderStatus.Approved,
-                ReturnOrderStatus.Completed => current == ReturnOrderStatus.Processing,
+                ReturnOrderStatus.Completed => current == ReturnOrderStatus.Requested,
+                //ReturnOrderStatus.Rejected => current == ReturnOrderStatus.Requested,
+                //ReturnOrderStatus.Processing => current == ReturnOrderStatus.Approved,
+                //ReturnOrderStatus.Completed => current == ReturnOrderStatus.Processing,
                 _ => false
             };
         }
@@ -232,19 +238,20 @@ namespace Dragza.Infrastructure.Services
         {
             switch (status)
             {
-                case ReturnOrderStatus.Approved:
-                    returnOrder.ApprovalDate = DateTime.UtcNow;
-                    returnOrder.AdminApproval = true;
-                    break;
+                //case ReturnOrderStatus.Approved:
+                //    returnOrder.ApprovalDate = DateTime.UtcNow;
+                //    returnOrder.AdminApproval = true;
+                //    break;
                 case ReturnOrderStatus.Completed:
                     returnOrder.Order.DeliverDate = DateTime.UtcNow;
+
                     break;
             }
         }
 
         private async Task<List<ReturnOrderDto>> CreateReturnOrdersByInventoryAsync(CreateReturnOrderDto dto, Guid pharmacyUserId,long uniqueNumber)
         {
-            using var transaction = await _unitOfWork.BeginTransactionAsync();
+            //using var transaction = await _unitOfWork.BeginTransactionAsync();
             var returnOrders = new List<ReturnOrderDto>();
 
             try
@@ -262,6 +269,7 @@ namespace Dragza.Infrastructure.Services
                     .Select(oi => oi.ProductPrice)
                     .Distinct()
                     .ToDictionary(pp => pp.Id, pp => pp.InventoryUserId);
+
 
                 // Group return items by inventory
                 var groupedItems = dto.Items
@@ -290,13 +298,13 @@ namespace Dragza.Infrastructure.Services
                 }
 
                 await _unitOfWork.SaveChangesAsync();
-                await transaction.CommitAsync();
+              //  await transaction.CommitAsync();
 
                 return returnOrders;
             }
             catch
             {
-                await transaction.RollbackAsync();
+              //  await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -345,7 +353,8 @@ namespace Dragza.Infrastructure.Services
 
                 // Calculate return amount (proportional to original price)
                 decimal unitPrice = orderItem.Amount / orderItem.Quantity;
-                decimal returnAmount = item.QuantityReturned * unitPrice;
+                 var up=  Math.Round(unitPrice);
+                decimal returnAmount = item.QuantityReturned * up;
 
                 // Create returned item
                 var returnedItem = new ReturnedItem
@@ -359,6 +368,7 @@ namespace Dragza.Infrastructure.Services
                     TotalAmount = returnAmount,
                     ReturnOrderId = returnOrder.Id,
                     OrderId = order.Id,
+                    InventoryId= inventoryId,
                     Status = (int)ReturnOrderStatus.Requested
                 };
 

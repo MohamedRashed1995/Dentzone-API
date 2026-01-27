@@ -72,6 +72,7 @@ public partial class DragzaContext : DbContext
 
     public virtual DbSet<Cart> Carts { get; set; }
     public virtual DbSet<CartItem> CartItems { get; set; }
+    public virtual DbSet<Notifacation> Notifacations { get; set; }
 
 
 
@@ -639,6 +640,13 @@ public partial class DragzaContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserToken_User");
         });
+
+
+        modelBuilder.Entity<Product>()
+       .HasIndex(p => p.ProductCode)
+       .IsUnique();
+
+
 
         OnModelCreatingPartial(modelBuilder);
     }

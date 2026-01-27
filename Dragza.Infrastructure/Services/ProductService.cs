@@ -3,6 +3,7 @@ using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -34,6 +35,7 @@ namespace Dragza.Infrastructure.Services
 
             var product = _mapper.Map<Product>(dto);
             product.Id = Guid.NewGuid();
+            product.ProductCode = GenerateProductCode();
             product.CreatedAt = DateTime.UtcNow;
             product.ActiveIngerdientId = dto.ActiveIngredientId;
             if (dto.Photo != null)
@@ -183,14 +185,33 @@ namespace Dragza.Infrastructure.Services
             return productdto;
         }
 
-        public Task<Product> AddProduct(ProductAddDto productDto)
+        public async Task<Product> AddProduct(ProductAddDto productDto)
         {
             var product1 = _mapper.Map<Product>(productDto);
 
-            var product =_unitOfWork.ProductRepository.AddProduct(product1);
+
+          
+
+          
+            product1.ProductCode = GenerateProductCode();
+
+            var product =await _unitOfWork.ProductRepository.AddProduct(product1);
 
             return product;
            
+        }
+
+
+        public static int GenerateProductCode()
+        {
+            return RandomNumberGenerator
+                .GetInt32(10000000, 99999999);
+               
+        }
+
+        public async Task<Product> GetproductbyCode(int productCode)
+        {
+            return await _unitOfWork.ProductRepository.GetProductByCode(productCode);
         }
     }
 }

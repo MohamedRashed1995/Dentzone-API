@@ -44,7 +44,7 @@ namespace Dragza.Infrastructure.Services
                     {
                         var warehouseId = group.Key;
                         var checkMinOrder = _context.Users.Where(a=>a.Id==warehouseId).FirstOrDefault().MinOrder;
-                        var totalAmount = (decimal)group.Sum(i => i.Quantity * i.ProductPrice.SalesPrice);
+                        var totalAmount = (decimal)group.Sum(i => i.Quantity *(i.ProductPrice.SalesPrice-(i.ProductPrice.SalesPrice*i.ProductPrice.DiscountRate/100)));
                         if (totalAmount >= checkMinOrder) {
                             var order = new Order
                             {
@@ -53,7 +53,7 @@ namespace Dragza.Infrastructure.Services
                                 InventoryUserId = warehouseId,
                                 OrderDate = DateTime.Now,
                                 Status = (int)OrderStatus.Pending,
-                                TotalAmount = (decimal)group.Sum(i => i.Quantity * i.ProductPrice.SalesPrice),
+                                TotalAmount = (decimal)group.Sum(i => i.Quantity * (i.ProductPrice.SalesPrice - (i.ProductPrice.SalesPrice * i.ProductPrice.DiscountRate / 100))),
                                 OrderNumber = Guid.NewGuid().ToString().Substring(0, 8)
                             };
 
@@ -69,7 +69,7 @@ namespace Dragza.Infrastructure.Services
                                     ProductId = item.ProductId,
                                     ProductPriceId = item.ProductPriceId,
                                     Quantity = item.Quantity,
-                                    Amount = (decimal)(item.Quantity * item.ProductPrice.SalesPrice),
+                                    Amount = (decimal)(item.Quantity * (item.ProductPrice.SalesPrice-(item.ProductPrice.SalesPrice*item.ProductPrice.DiscountRate/100))),
                                     InventoryId = warehouseId
                                 };
 
@@ -166,6 +166,7 @@ namespace Dragza.Infrastructure.Services
         public async Task<Order> GetByIdWithItemsAsync(Guid id)
         {
             return await _context.Orders
+                .Include(a=>a.OrderItems)
                 .Include(u => u.InventoryUser)
                 .Include(p => p.PharmacyUser)
                 .Include(cu => cu.CouponUsages)
@@ -175,8 +176,8 @@ namespace Dragza.Infrastructure.Services
                 .ThenInclude(n => n.InventoryUser)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductPrice)
+             
+             
                 .FirstOrDefaultAsync(o => o.Id == id);
         }
         public async Task<List<Guid>> GetCompletedOrderIdsAsync()
