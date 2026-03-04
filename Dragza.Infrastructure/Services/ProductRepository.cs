@@ -10,12 +10,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace Dragza.Infrastructure.Services
 {
     public class ProductRepository : Repository<Product>, IProductRepository
     {
-        
+        private readonly string _baseProductUrl = "http://dentzone.runasp.net/Uploads/products/";
+        private readonly string _baseCategoriesUrl = "http://dentzone.runasp.net/Uploads/categories/";
+
+
         public ProductRepository(DragzaContext context ) : base(context) 
         {
            
@@ -25,111 +29,77 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.ActiveIngerdient)
+                //.Include(p => p.BestSellerProducts)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.InventoryUser)
+                    .ThenInclude(pp => pp.Inventory)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted , string search="", int page = 1, int size = 10)
+        public async Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted, string search = "", int page = 1, int size = 10)
         {
-            try
+            var query = _context.Products.AsQueryable();
+
+            
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search));
+
+            // Include قبل Skip/Take
+            query = query
+                .Include(p => p.Category)
+                .Include(p => p.ProductPrices)
+                    .ThenInclude(pp => pp.Inventory)
+                .AsSplitQuery()
+                .OrderByDescending(p => p.CreatedAt);
+
+            var data = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .Include(p => p.Category)
+                .Include(p => p.ProductPrices)
+                    .ThenInclude(pp => pp.Inventory)
+                .AsSplitQuery()
+                .ToListAsync();
+
+            // تعديل الصور قبل الإرجاع
+            data.ForEach(p =>
             {
-
-                //            var data = await baseQuery
-                //.OrderByDescending(p => p.CreatedAt)
-                //.Skip((page - 1) * size)
-                //.Take(size)
-                //.Select(p => new ProductVM
-                //{
-                //    Id = p.Id,
-                //    Name = p.Name,
-                //    ArabicName = p.ArabicName,
-                //    CategoryName = p.Category.Name,
-                //    ActiveIngredient = p.ActiveIngerdient.Name,
-                //    Prices = p.ProductPrices.Select(pp => new PriceVM
-                //    {
-                //        Price = pp.Price,
-                //        InventoryUser = pp.InventoryUser.UserName
-                //    }).ToList()
-                //})
-                //.ToListAsync();
-
-
-
-
-
-
-
-                var baseQuery = _context.Products
-                    .AsNoTracking()
-                    .Where(p => p.IsDeleted != true);
-
-                if (!string.IsNullOrWhiteSpace(search))
+                // للـ Product
+                if (!string.IsNullOrEmpty(p.Image))
                 {
-                    baseQuery = baseQuery.Where(p =>
-                        p.Name.Contains(search) ||
-                        p.ArabicName.Contains(search) ||
-                        p.ActiveIngerdient.Name.Contains(search));
+                    if (!p.Image.StartsWith("http"))
+                    {
+                        var imageFile = p.Image;
+                        if (imageFile.StartsWith("products/"))
+                            imageFile = imageFile.Substring(9);
+
+                        p.Image = $"{_baseProductUrl}{imageFile}";
+                    }
                 }
 
+                // للـ Category
+                if (p.Category != null && !string.IsNullOrEmpty(p.Category.ImageName))
+                {
+                    if (!p.Category.ImageName.StartsWith("http"))
+                    {
+                        p.Category.ImageName = $"{_baseCategoriesUrl}{p.Category.ImageName}";
+                    }
+                }
+            });
 
-                var totalrow = await baseQuery.CountAsync();
-                var pages = (int)Math.Ceiling((decimal)totalrow / size);
-
-                var data = await baseQuery
-                    .OrderByDescending(p => p.CreatedAt) 
-                    .Skip((page - 1) * size)
-                    .Take(size)
-                    .Include(p => p.Category)
-                    .Include(p => p.ActiveIngerdient)
-                    .Include(p => p.ProductPrices)
-                        .ThenInclude(pp => pp.InventoryUser)
-                    .AsSplitQuery() 
-                    .ToListAsync();
-
-                return data;
-
-
-                // var query = _context.Products
-                //.Where(p => p.IsDeleted != true)
-                //.Include(p => p.Category)
-                //.Include(p => p.ActiveIngerdient)
-                //.Include(p => p.ProductPrices)
-                //    .ThenInclude(pp => pp.InventoryUser)
-                //.AsQueryable().Skip((page - 1) * size).Take(size);
-
-
-                //  var totalrow = query.Count();
-
-                //  var pages = (int)Math.Ceiling((decimal)totalrow / size);
-
-
-                //  //query = query.Skip((page - 1) * size).Take(size);
-
-
-                //  if (!string.IsNullOrWhiteSpace(search))
-                //      query = query.Where(p => p.Name.Contains(search) || p.ArabicName.Contains(search) || p.ActiveIngerdient.Name.Contains(search));
-
-                //  return await query.ToListAsync();
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-          
+            return data;
         }
-        public async Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId)
-        {
-            return await _context.Products
-                .Where(p => p.ActiveIngerdientId != null && p.ActiveIngerdientId == activeIngredientId && p.IsDeleted != true)
-                .Include(p => p.Category)
-                .Include(p => p.ActiveIngerdient)
-                .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.InventoryUser)
-                .ToListAsync();
-        }
+        //public async Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId)
+        //{
+        //    return await _context.Products
+        //        .Where(p => p.ActiveIngerdientId != null && p.ActiveIngerdientId == activeIngredientId && p.IsDeleted != true)
+        //        .Include(p => p.Category)
+        //        //.Include(p => p.ActiveIngerdient)
+        //        .Include(p => p.ProductPrices)
+        //            .ThenInclude(pp => pp.InventoryUser)
+        //        .ToListAsync();
+        //}
 
         public async Task<List<Guid>> GetCompletedOrderIdsAsync()
         {
@@ -142,9 +112,10 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.ActiveIngerdient)
+                //.Include(p => p.ActiveIngerdient)
                 .Include(a=>a.ProductPrices)
-                .Where(p => p.CategoryId == categoryId && (p.IsDeleted == null || p.IsDeleted == false) &&p.ProductPrices.Count!=0)
+                //.Include(b => b.Product)
+                .Where(p => p.CategoryId == categoryId && p.ProductPrices.Count!=0)
                 .ToListAsync();
         }
         public IQueryable<BestSellerProduct> GetBestSellingProductsQuery(List<Guid> orderIds)
@@ -167,7 +138,7 @@ namespace Dragza.Infrastructure.Services
                 .Where(pp => pp.CategoryId == categoryId && pp.IsDeleted != true)
                 .Include(pp => pp.Product)
                 .Include(pp => pp.Category)
-                .Include(pp => pp.InventoryUser)
+                .Include(pp => pp.Inventory)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
         }
@@ -176,10 +147,10 @@ namespace Dragza.Infrastructure.Services
         {
             var products = await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.ActiveIngerdient)
+                //.Include(p => p.ActiveIngerdient)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.InventoryUser)
-                .Where(p => p.IsDeleted != true && p.ProductPrices.Any(x => x.InventoryUserId == inventoryId))
+                    .ThenInclude(pp => pp.Inventory)
+                .Where(p => p.ProductPrices.Any(x => x.InventoryUserId == inventoryId))
                 .ToListAsync();
 
             return products;

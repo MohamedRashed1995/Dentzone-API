@@ -13,7 +13,7 @@ public partial class Invoice
 
     public decimal TotalAmount { get; set; }
 
-    public Guid PharmacyUserId { get; set; }
+    public Guid UserId { get; set; }
 
     public Guid InvoiceTypeId { get; set; }
 

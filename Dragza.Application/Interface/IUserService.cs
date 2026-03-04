@@ -11,11 +11,11 @@ namespace Dragza.Application.Interface
     public interface IUserService
     {
         Task<UserResponseDto> RegisterUserAsync(CreateUserDto createUserDto);
-        Task<JWTTokenDTO> LoginAsync(LoginDto loginDto);
+        Task<LoginResponseDto> LoginAsync(LoginDto loginDto);
         Task<List<UserDto>> GetAllUsers();
         Task<bool> DeleteUser(Guid id);
         Task<bool> DeActivateUser(Guid id);
-        Task<IEnumerable<UserWithPharmacyDto>> GetUsersByRoleWithPharmacyAsync(Guid roleId);
+        Task<List<UserWithSpecificRolesDto>> GetUsersByRoleWithPharmacyAsync(Guid roleId);
         Task<UserDto> GetUser(Guid id);
         Task<UserResponseDto> UpdateUserAsync(Guid userId,UpdateUserDto updateUserDto);
         Task<bool> ChangePasswordAsync(ChangePassword model);

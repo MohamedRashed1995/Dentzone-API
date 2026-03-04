@@ -6,47 +6,20 @@ namespace Dragza.Domain.Models;
 public partial class Product
 {
     public Guid Id { get; set; }
-
     public string Name { get; set; } = null!;
-
     public string? Preef { get; set; }
-
+    public string? ArabicPreef { get; set; }
     public string? Description { get; set; }
-
+    public string? ArabicDescription { get; set; }
     public Guid CategoryId { get; set; }
-
     public DateTime? CreatedAt { get; set; }
-
     public DateTime? UpdatedAt { get; set; }
-
-    public bool? IsDeleted { get; set; }
-
-    public DateTime? DeletedDate { get; set; }
-
-    public Guid? ActiveIngerdientId { get; set; }
-
-    public Guid? MainCategoryId { get; set; }
-
     public string? Image { get; set; }
-
     public string? ArabicName { get; set; }
-	//public decimal? PurchasePrice { get; set; }
-	//public decimal? SalesPrice { get; set; }
-
-	public virtual ActiveIngredient? ActiveIngerdient { get; set; }
-
     public virtual ICollection<BestSellerProduct> BestSellerProducts { get; set; } = new List<BestSellerProduct>();
-
     public virtual Category Category { get; set; } = null!;
-
-    public virtual MainCategory? MainCategory { get; set; }
-	//public Guid? InventoryUserId { get; set; }
-	//public virtual User? InventoryUser { get; set; }
-
-	public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
-
     public virtual ICollection<ReturnedItem> ReturnedItems { get; set; } = new List<ReturnedItem>();
     public int? ProductCode { get; set; }
 }

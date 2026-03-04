@@ -24,20 +24,20 @@ public partial class ProductPrice
 
     public DateTime? DeletedDate { get; set; }
 
-    public Guid InventoryUserId { get; set; }
+  
 
     public int StockQuantity { get; set; }
     public int MaxQuantity { get; set; }
 
-    public Guid? MainCategoryId { get; set; }
     [Column("Discount Rate")]  // exact column name in SQL Server
     public decimal DiscountRate { get; set; }
 
     public virtual Category? Category { get; set; } = null!;
 
-    public virtual User InventoryUser { get; set; } = null!;
 
-    public virtual MainCategory? MainCategory { get; set; }
+    public Guid InventoryUserId { get; set; }
+   [ForeignKey("InventoryUserId")]
+    public virtual User Inventory { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

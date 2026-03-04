@@ -17,7 +17,7 @@ namespace Dragza.Application.Interface
         Task<ProductResponseDto> UpdateProductAsync(Guid id, UpdateProductDto dto);
         Task SoftDeleteProductAsync(Guid id);
         Task RestoreProductAsync(Guid id);
-        Task<IEnumerable<ProductResponseDto>> GetProductsByActiveIngredientAsync(Guid activeIngredientId);
+        //Task<IEnumerable<ProductResponseDto>> GetProductsByActiveIngredientAsync(Guid activeIngredientId);
         Task<IEnumerable<BestSellerProductDto>> GetBestSellingProductsAsync(int topN = 10);
         Task<IEnumerable<ProductBestPriceDto>> GetProductsByCategoryAsync(Guid categoryId);
 

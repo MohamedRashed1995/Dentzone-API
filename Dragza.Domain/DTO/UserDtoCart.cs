@@ -10,9 +10,9 @@ namespace Dragza.Domain.DTO
     {
         public Guid Id { get; set; }
 
-        public string? BussinesName { get; set; }
-
-        public bool? IsPharmacy { get; set; }
+        //public string? BussinesName { get; set; }
+        public string FullName { get; set; }
+        //public bool? IsPharmacy { get; set; }
 
         public string? Photo { get; set; }
 

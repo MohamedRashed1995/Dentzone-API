@@ -24,7 +24,9 @@ namespace Dragza.Infrastructure.Services
             _context = context;
         }
 
-        public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
+        public DragzaContext DbContext => _context;
+
+        public IUserRepository UserRepository => _userRepository = new UserRepository(_context);
         public IRepository<Role> RoleRepository => new Repository<Role>(_context);
         public IProductPriceRepository ProductPriceRepository => new ProductPriceRepository(_context);
         public IProductRepository ProductRepository => new ProductRepository(_context);
@@ -34,12 +36,10 @@ namespace Dragza.Infrastructure.Services
         public IReturnReasonRepository ReturnReasonRepository => new ReturnReasonRepository(_context);
         public IReturnedItemRepository ReturnedItemRepository => new ReturnedItemRepository(_context);
         public IReturnOrderRepository ReturnOrderRepository => new ReturnOrderRepository(_context);
-        public IRepository<City> CityRepository => new Repository<City>(_context);
-        public IRepository<Destrict> DestrictRepository => new Repository<Destrict>(_context);
-        public IRegionRepository RegionRepository => new RegionRepository(_context);
+        public IAddressRepository AddressRepository => new AddressRepository(_context);
 
-        public IPharmacyDetailRepository PharmacyDetailRepository => new PharmacyDetailRepository(_context);
-        public IActiveIngredientRepository ActiveIngredientRepository => new ActiveIngredientRepository(_context);
+        //public IPharmacyDetailRepository PharmacyDetailRepository => new PharmacyDetailRepository(_context);
+        //public IActiveIngredientRepository ActiveIngredientRepository => new ActiveIngredientRepository(_context);
         public ICouponRepository CouponRepository => new CouponRepository(_context);
         public ICouponApplicabilityRepository CouponApplicabilityRepository => new CouponApplicabilityRepository(_context);
         public ICouponUsageRepository CouponUsageRepository => new CouponUsageRepository(_context);
@@ -47,9 +47,8 @@ namespace Dragza.Infrastructure.Services
         public IBalanceTransactionRepository BalanceTransactionRepository => new BalanceTransactionRepository(_context);
         public IInvoiceRepository InvoiceRepository => new InvoiceRepository(_context);
         public IInvoiceTypeRepository InvoiceTypeRepository => new InvoiceTypeRepository(_context);
-        public IMainCategoryRepository MainCategoryRepository => new MainCategoryRepository(_context);
-        public IGovernateRepository GovernateRepository => new GovernateRepository(_context);
-
+        
+        
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
             _transaction = await _context.Database.BeginTransactionAsync();

@@ -12,7 +12,7 @@ namespace Dragza.Application.Interface
     {
         Task<Product> GetProductWithDetailsAsync(Guid id);
         Task<List<Product>> GetAllProductsWithDetailsAsync(bool includeDeleted, string search, int page = 1, int size = 10);
-        Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId);
+        //Task<List<Product>> GetByActiveIngredientAsync(Guid activeIngredientId);
         Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId);
         Task<IEnumerable<Product>> GetProductsAsync(string name);
         Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId);

@@ -46,7 +46,7 @@ public class ReportFilterDto
 {
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public Guid? PharmacyUserId { get; set; }
+    public Guid? UserId { get; set; }
     public Guid? InventoryUserId { get; set; }  // Added this line
     public Guid? RegionId { get; set; }
     public int? Status { get; set; }

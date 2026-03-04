@@ -20,7 +20,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Invoices
                 .Include(i => i.InvoiceType)
                 .Include(i => i.Order)
-                    .ThenInclude(o => o.PharmacyUser)
+                    .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync(i => i.Id == id);
         }
 
@@ -29,7 +29,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Invoices
                 .Include(i => i.InvoiceType)
                 .Include(i => i.Order)
-                    .ThenInclude(o => o.PharmacyUser)
+                    .ThenInclude(o => o.User)
                 .FirstOrDefaultAsync(i => i.OrderId == orderId);
         }
 
@@ -38,7 +38,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Invoices
                 .Include(i => i.InvoiceType)
                 .Include(i => i.Order)
-                .Where(i => i.PharmacyUserId == userId)
+                .Where(i => i.UserId == userId)
                 .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync();
         }
@@ -57,7 +57,7 @@ namespace Dragza.Infrastructure.Services
             return await _context.Invoices
                 .Include(i => i.InvoiceType)
                 .Include(i => i.Order)
-                    .ThenInclude(o => o.PharmacyUser)
+                    .ThenInclude(o => o.User)
                 .Where(i => i.InvoiceDate >= startDate && i.InvoiceDate <= endDate)
                 .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync();

@@ -23,25 +23,24 @@ namespace Dragza.Application.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Dragza.Domain.Models.ActiveIngredient", b =>
+            modelBuilder.Entity("Dragza.Domain.Models.Address", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsMeltable")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
+                    b.Property<string>("AddressLine")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ActiveIngredient", (string)null);
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.BalanceAccount", b =>
@@ -71,8 +70,7 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id")
-                        .HasName("PK__BalanceA__3214EC07AEDCCED6");
+                    b.HasKey("Id");
 
                     b.HasIndex(new[] { "UserId" }, "IX_BalanceAccounts_UserId");
 
@@ -114,8 +112,7 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id")
-                        .HasName("PK__BalanceT__3214EC07E9118AE8");
+                    b.HasKey("Id");
 
                     b.HasIndex("RelatedTransactionId");
 
@@ -126,9 +123,33 @@ namespace Dragza.Application.Migrations
                     b.ToTable("BalanceTransactions");
                 });
 
+            modelBuilder.Entity("Dragza.Domain.Models.Banner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Banners");
+                });
+
             modelBuilder.Entity("Dragza.Domain.Models.BestSellerProduct", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ProductId")
@@ -138,13 +159,13 @@ namespace Dragza.Application.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("TotalRevenue")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("BestSellerProduct", (string)null);
+                    b.ToTable("BestSellerProducts");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Cart", b =>
@@ -209,287 +230,157 @@ namespace Dragza.Application.Migrations
             modelBuilder.Entity("Dragza.Domain.Models.Category", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("MainCategoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Pref")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MainCategoryId");
-
-                    b.ToTable("Category", (string)null);
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.City", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("GovernateId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id")
-                        .HasName("PK_Area");
-
-                    b.HasIndex("GovernateId");
-
-                    b.ToTable("City", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Coupon", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("(newid())");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("code");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("(getutcdate())");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("description");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DiscountType")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("discount_type");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountValue")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("discount_value");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("end_date");
+                        .HasColumnType("datetime2");
 
                     b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_active");
+                        .HasColumnType("bit");
 
                     b.Property<decimal?>("MaximumDiscountAmount")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("maximum_discount_amount");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("MinimumOrderAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(10, 2)")
-                        .HasDefaultValue(0.00m)
-                        .HasColumnName("minimum_order_amount");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("PerUserLimit")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("per_user_limit");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("start_date");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("(getutcdate())");
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("UsageLimit")
-                        .HasColumnType("int")
-                        .HasColumnName("usage_limit");
+                        .HasColumnType("int");
 
-                    b.HasKey("Id")
-                        .HasName("PK__coupons__3213E83FC3864A76");
+                    b.HasKey("Id");
 
-                    b.HasIndex(new[] { "IsActive", "StartDate", "EndDate" }, "IX_coupons_active");
-
-                    b.HasIndex(new[] { "Code" }, "IX_coupons_code");
-
-                    b.HasIndex(new[] { "Code" }, "UQ__coupons__357D4CF970C4BAC3")
-                        .IsUnique();
-
-                    b.ToTable("coupons", (string)null);
+                    b.ToTable("Coupons");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.CouponApplicability", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("(newid())");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ApplicableId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("applicable_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ApplicableType")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("applicable_type");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("CouponId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("coupon_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("(getutcdate())");
+                        .HasColumnType("datetime2");
 
-                    b.HasKey("Id")
-                        .HasName("PK__coupon_a__3213E83FECA136AB");
+                    b.HasKey("Id");
 
-                    b.HasIndex(new[] { "CouponId", "ApplicableType", "ApplicableId" }, "IX_coupon_applicability");
+                    b.HasIndex("CouponId");
 
-                    b.ToTable("coupon_applicability", (string)null);
+                    b.ToTable("CouponApplicabilities");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.CouponUsage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("(newid())");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CouponId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("coupon_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("discount_amount");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("OrderId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("order_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UsedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("used_at")
-                        .HasDefaultValueSql("(getutcdate())");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("PK__coupon_u__3213E83F8C342324");
-
-                    b.HasIndex(new[] { "CouponId" }, "IX_coupon_usages_coupon");
-
-                    b.HasIndex(new[] { "OrderId" }, "IX_coupon_usages_order");
-
-                    b.HasIndex(new[] { "UserId" }, "IX_coupon_usages_user");
-
-                    b.HasIndex(new[] { "CouponId", "OrderId" }, "UQ_CouponOrder")
-                        .IsUnique();
-
-                    b.ToTable("coupon_usages", (string)null);
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.Destrict", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CityId");
-
-                    b.ToTable("Destrict", (string)null);
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.Governate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid?>("RegionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RegionId");
+                    b.HasIndex("CouponId");
 
-                    b.ToTable("Governate", (string)null);
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CouponUsages");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("InvoiceTypeId")
                         .HasColumnType("uniqueidentifier");
@@ -497,50 +388,26 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PharmacyUserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceTypeId");
 
-                    b.HasIndex(new[] { "OrderId" }, "IX_Invoices_OrderId");
+                    b.HasIndex("OrderId");
 
-                    b.ToTable("Invoice", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.InvoiceType", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("(newid())");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id")
-                        .HasName("PK__InvoiceT__3214EC07A00F4181");
-
-                    b.ToTable("InvoiceTypes");
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.MainCategory", b =>
-                {
-                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ArabicName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -551,7 +418,7 @@ namespace Dragza.Application.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MainCategory", (string)null);
+                    b.ToTable("InvoiceTypes");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Notifacation", b =>
@@ -622,22 +489,20 @@ namespace Dragza.Application.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<Guid>("PharmacyUserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18, 0)");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreditAccountId");
 
-                    b.HasIndex("InventoryUserId");
-
-                    b.HasIndex(new[] { "PharmacyUserId" }, "IX_Orders_PharmacyUserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Order", (string)null);
                 });
@@ -681,158 +546,67 @@ namespace Dragza.Application.Migrations
                     b.ToTable("OrderItem", (string)null);
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.PharmacyDetail", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ArabicName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("CommercialRegisteryAttach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("CommercialRegisteryNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("DemoAgentCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("EnglishName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("LandLineNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("NationalId")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("NationalIdAttach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("OwnersgipAttach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("PharmacyLicenseAttach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("PharmacyLicenseNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid?>("PurchasingManager")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TaxationCardAttach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("TaxationCardNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PurchasingManager");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PharmacyDetails");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.Product", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ActiveIngerdientId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ArabicDescription")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ArabicPreef")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Image")
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("MainCategoryId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Preef")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ProductCode")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActiveIngerdientId");
-
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("MainCategoryId");
-
-                    b.HasIndex("ProductCode")
-                        .IsUnique()
-                        .HasFilter("[ProductCode] IS NOT NULL");
-
-                    b.ToTable("Product", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ProductPrice", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CreationDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal>("DiscountRate")
                         .HasColumnType("decimal(18,2)")
@@ -844,9 +618,6 @@ namespace Dragza.Application.Migrations
                     b.Property<bool?>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("MainCategoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("MaxQuantity")
                         .HasColumnType("int");
 
@@ -854,16 +625,16 @@ namespace Dragza.Application.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("PurchasePrice")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("SalesPrice")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StockQuantity")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -871,50 +642,22 @@ namespace Dragza.Application.Migrations
 
                     b.HasIndex("InventoryUserId");
 
-                    b.HasIndex("MainCategoryId");
-
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductPrice", (string)null);
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.Region", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Lang")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Lat")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("lat");
-
-                    b.Property<string>("RegionName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Region", (string)null);
+                    b.ToTable("ProductPrices");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ReturnOrder", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AdminApproval")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid?>("InventoryUserId")
                         .HasColumnType("uniqueidentifier");
@@ -922,21 +665,20 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PharmacyUserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("RequestDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ReturnOrderNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Statuse")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalReturnValue")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -944,29 +686,30 @@ namespace Dragza.Application.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("PharmacyUserId");
+                    b.HasIndex("UserId");
 
-                    b.ToTable("ReturnOrder", (string)null);
+                    b.ToTable("ReturnOrders");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ReturnReason", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ReturnReason", (string)null);
+                    b.ToTable("ReturnReasons");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ReturnedItem", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("InventoryId")
@@ -981,7 +724,13 @@ namespace Dragza.Application.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ProductId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ProductPriceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductPriceId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("QuantityReturned")
@@ -997,7 +746,7 @@ namespace Dragza.Application.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -1007,103 +756,48 @@ namespace Dragza.Application.Migrations
 
                     b.HasIndex("ProductId");
 
+                    b.HasIndex("ProductId1");
+
                     b.HasIndex("ProductPriceId");
+
+                    b.HasIndex("ProductPriceId1");
 
                     b.HasIndex("ReasonId");
 
                     b.HasIndex("ReturnOrderId");
 
-                    b.ToTable("ReturnedItem", (string)null);
+                    b.ToTable("ReturnedItems");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Role", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Role", (string)null);
-                });
+                    b.ToTable("Roles");
 
-            modelBuilder.Entity("Dragza.Domain.Models.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BussinesName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool?>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsPharmacy")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal?>("MinOrder")
-                        .HasColumnType("decimal(18, 0)");
-
-                    b.Property<string>("NomalizedUserName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("PhoneConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Photo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("RegionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("SubAreaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RegionId");
-
-                    b.HasIndex("SubAreaId");
-
-                    b.ToTable("User", (string)null);
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("8c2f4f3a-7f6d-4db8-8b02-4a04d31f35d6"),
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("e48e5a9f-2074-4de9-a849-5c69fdd45e4e"),
+                            Name = "User"
+                        },
+                        new
+                        {
+                            Id = new Guid("1a5a84fb-23c3-4f9b-a122-4c5bc6c5cb2d"),
+                            Name = "Inventory"
+                        });
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.UserRole", b =>
@@ -1151,13 +845,61 @@ namespace Dragza.Application.Migrations
                     b.ToTable("UserToken", (string)null);
                 });
 
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("User", (string)null);
+                });
+
+            modelBuilder.Entity("Dragza.Domain.Models.Address", b =>
+                {
+                    b.HasOne("User", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Dragza.Domain.Models.BalanceAccount", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany("BalanceAccounts")
                         .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_BalanceAccounts_Users");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1167,18 +909,15 @@ namespace Dragza.Application.Migrations
                     b.HasOne("Dragza.Domain.Models.BalanceAccount", "BalanceAccount")
                         .WithMany("BalanceTransactions")
                         .HasForeignKey("BalanceAccountId")
-                        .IsRequired()
-                        .HasConstraintName("FK_BalanceTransactions_BalanceAccounts");
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("BalanceTransactions")
-                        .HasForeignKey("OrderId")
-                        .HasConstraintName("FK_BalanceTransactions_Orders");
+                        .HasForeignKey("OrderId");
 
                     b.HasOne("Dragza.Domain.Models.BalanceTransaction", "RelatedTransaction")
                         .WithMany("InverseRelatedTransaction")
-                        .HasForeignKey("RelatedTransactionId")
-                        .HasConstraintName("FK_BalanceTransactions_RelatedTransactions");
+                        .HasForeignKey("RelatedTransactionId");
 
                     b.Navigation("BalanceAccount");
 
@@ -1192,8 +931,8 @@ namespace Dragza.Application.Migrations
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
                         .WithMany("BestSellerProducts")
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_BestSellerProduct_Product");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
                 });
@@ -1203,25 +942,25 @@ namespace Dragza.Application.Migrations
                     b.HasOne("Dragza.Domain.Models.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.User", "InventoryUser")
+                    b.HasOne("User", "InventoryUser")
                         .WithMany()
                         .HasForeignKey("InventoryUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.ProductPrice", "ProductPrice")
                         .WithMany()
                         .HasForeignKey("ProductPriceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Cart");
@@ -1233,35 +972,13 @@ namespace Dragza.Application.Migrations
                     b.Navigation("ProductPrice");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.Category", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.MainCategory", "MainCategory")
-                        .WithMany("Categories")
-                        .HasForeignKey("MainCategoryId")
-                        .HasConstraintName("FK_Category_MainCategory");
-
-                    b.Navigation("MainCategory");
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.City", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.Governate", "Governate")
-                        .WithMany("Cities")
-                        .HasForeignKey("GovernateId")
-                        .IsRequired()
-                        .HasConstraintName("FK_City_Governate");
-
-                    b.Navigation("Governate");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.CouponApplicability", b =>
                 {
                     b.HasOne("Dragza.Domain.Models.Coupon", "Coupon")
                         .WithMany("CouponApplicabilities")
                         .HasForeignKey("CouponId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK__coupon_ap__coupo__6166761E");
+                        .IsRequired();
 
                     b.Navigation("Coupon");
                 });
@@ -1271,20 +988,20 @@ namespace Dragza.Application.Migrations
                     b.HasOne("Dragza.Domain.Models.Coupon", "Coupon")
                         .WithMany("CouponUsages")
                         .HasForeignKey("CouponId")
-                        .IsRequired()
-                        .HasConstraintName("FK__coupon_us__coupo__690797E6");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("CouponUsages")
                         .HasForeignKey("OrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_coupon_usages_Order");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.User", "User")
-                        .WithMany("CouponUsages")
+                    b.HasOne("User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_coupon_usages_User");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Coupon");
 
@@ -1293,40 +1010,19 @@ namespace Dragza.Application.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.Destrict", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.City", "City")
-                        .WithMany("Destricts")
-                        .HasForeignKey("CityId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Destrict_City");
-
-                    b.Navigation("City");
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.Governate", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.Region", "Region")
-                        .WithMany("Governates")
-                        .HasForeignKey("RegionId")
-                        .HasConstraintName("FK_Governate_Region");
-
-                    b.Navigation("Region");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.Invoice", b =>
                 {
                     b.HasOne("Dragza.Domain.Models.InvoiceType", "InvoiceType")
                         .WithMany("Invoices")
                         .HasForeignKey("InvoiceTypeId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Invoice_InvoiceTypes");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("Invoices")
                         .HasForeignKey("OrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Invoice_Order");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("InvoiceType");
 
@@ -1338,50 +1034,43 @@ namespace Dragza.Application.Migrations
                     b.HasOne("Dragza.Domain.Models.BalanceAccount", "CreditAccount")
                         .WithMany("Orders")
                         .HasForeignKey("CreditAccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("FK_Order_BalanceAccounts");
 
-                    b.HasOne("Dragza.Domain.Models.User", "InventoryUser")
-                        .WithMany("OrderInventoryUsers")
-                        .HasForeignKey("InventoryUserId")
-                        .HasConstraintName("FK_Order_User1");
-
-                    b.HasOne("Dragza.Domain.Models.User", "PharmacyUser")
-                        .WithMany("OrderPharmacyUsers")
-                        .HasForeignKey("PharmacyUserId")
+                    b.HasOne("User", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
                         .IsRequired()
                         .HasConstraintName("FK_Order_User");
 
                     b.Navigation("CreditAccount");
 
-                    b.Navigation("InventoryUser");
-
-                    b.Navigation("PharmacyUser");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.OrderItem", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.User", "Inventory")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("InventoryId")
-                        .HasConstraintName("FK_OrderItem_User");
+                    b.HasOne("User", "Inventory")
+                        .WithMany()
+                        .HasForeignKey("InventoryId");
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_OrderItem_Order");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_OrderItem_Product");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.ProductPrice", "ProductPrice")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductPriceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_OrderItem_ProductPrice");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Inventory");
 
@@ -1392,143 +1081,111 @@ namespace Dragza.Application.Migrations
                     b.Navigation("ProductPrice");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.PharmacyDetail", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.User", "PurchasingManagerNavigation")
-                        .WithMany("PharmacyDetailPurchasingManagerNavigations")
-                        .HasForeignKey("PurchasingManager")
-                        .HasConstraintName("FK_PharmacyDetails_User1");
-
-                    b.HasOne("Dragza.Domain.Models.User", "User")
-                        .WithMany("PharmacyDetailUsers")
-                        .HasForeignKey("UserId")
-                        .HasConstraintName("FK_PharmacyDetails_User");
-
-                    b.Navigation("PurchasingManagerNavigation");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.Product", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.ActiveIngredient", "ActiveIngerdient")
-                        .WithMany("Products")
-                        .HasForeignKey("ActiveIngerdientId")
-                        .HasConstraintName("FK_Product_ActiveIngredient");
-
                     b.HasOne("Dragza.Domain.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Product_Category");
-
-                    b.HasOne("Dragza.Domain.Models.MainCategory", "MainCategory")
-                        .WithMany("Products")
-                        .HasForeignKey("MainCategoryId")
-                        .HasConstraintName("FK_Product_MainCategory");
-
-                    b.Navigation("ActiveIngerdient");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("MainCategory");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ProductPrice", b =>
                 {
                     b.HasOne("Dragza.Domain.Models.Category", "Category")
                         .WithMany("ProductPrices")
-                        .HasForeignKey("CategoryId")
-                        .HasConstraintName("FK_ProductPrice_Category");
+                        .HasForeignKey("CategoryId");
 
-                    b.HasOne("Dragza.Domain.Models.User", "InventoryUser")
-                        .WithMany("ProductPrices")
+                    b.HasOne("User", "Inventory")
+                        .WithMany()
                         .HasForeignKey("InventoryUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ProductPrice_User");
-
-                    b.HasOne("Dragza.Domain.Models.MainCategory", "MainCategory")
-                        .WithMany("ProductPrices")
-                        .HasForeignKey("MainCategoryId")
-                        .HasConstraintName("FK_ProductPrice_MainCategory");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
                         .WithMany("ProductPrices")
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ProductPrice_Product");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
 
-                    b.Navigation("InventoryUser");
-
-                    b.Navigation("MainCategory");
+                    b.Navigation("Inventory");
 
                     b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ReturnOrder", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.User", "InventoryUser")
-                        .WithMany("ReturnOrderInventoryUsers")
-                        .HasForeignKey("InventoryUserId")
-                        .HasConstraintName("FK_ReturnOrder_User1");
+                    b.HasOne("User", "InventoryUser")
+                        .WithMany()
+                        .HasForeignKey("InventoryUserId");
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("ReturnOrders")
                         .HasForeignKey("OrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnOrder_Order");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.User", "PharmacyUser")
-                        .WithMany("ReturnOrderPharmacyUsers")
-                        .HasForeignKey("PharmacyUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnOrder_User");
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("InventoryUser");
 
                     b.Navigation("Order");
 
-                    b.Navigation("PharmacyUser");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.ReturnedItem", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.User", "Inventory")
-                        .WithMany("ReturnedItems")
+                    b.HasOne("User", "Inventory")
+                        .WithMany()
                         .HasForeignKey("InventoryId")
-                        .HasConstraintName("FK_ReturnedItem_User");
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Dragza.Domain.Models.Order", "Order")
                         .WithMany("ReturnedItems")
                         .HasForeignKey("OrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnedItem_Order");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.Product", "Product")
-                        .WithMany("ReturnedItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnedItem_Product");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Dragza.Domain.Models.Product", null)
+                        .WithMany("ReturnedItems")
+                        .HasForeignKey("ProductId1");
 
                     b.HasOne("Dragza.Domain.Models.ProductPrice", "ProductPrice")
-                        .WithMany("ReturnedItems")
+                        .WithMany()
                         .HasForeignKey("ProductPriceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnedItem_ProductPrice");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Dragza.Domain.Models.ProductPrice", null)
+                        .WithMany("ReturnedItems")
+                        .HasForeignKey("ProductPriceId1");
 
                     b.HasOne("Dragza.Domain.Models.ReturnReason", "Reason")
                         .WithMany("ReturnedItems")
                         .HasForeignKey("ReasonId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnedItem_ReturnReason");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Dragza.Domain.Models.ReturnOrder", "ReturnOrder")
                         .WithMany("ReturnedItems")
                         .HasForeignKey("ReturnOrderId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ReturnedItem_ReturnOrder");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Inventory");
 
@@ -1543,36 +1200,19 @@ namespace Dragza.Application.Migrations
                     b.Navigation("ReturnOrder");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.User", b =>
-                {
-                    b.HasOne("Dragza.Domain.Models.Region", "Region")
-                        .WithMany("Users")
-                        .HasForeignKey("RegionId")
-                        .HasConstraintName("FK_User_Region");
-
-                    b.HasOne("Dragza.Domain.Models.Governate", "SubArea")
-                        .WithMany("Users")
-                        .HasForeignKey("SubAreaId")
-                        .HasConstraintName("FK_User_Governate");
-
-                    b.Navigation("Region");
-
-                    b.Navigation("SubArea");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.UserRole", b =>
                 {
                     b.HasOne("Dragza.Domain.Models.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
-                        .IsRequired()
-                        .HasConstraintName("FK_UserRoles_Role");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
-                    b.HasOne("Dragza.Domain.Models.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_UserRoles_User");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Role");
 
@@ -1581,18 +1221,13 @@ namespace Dragza.Application.Migrations
 
             modelBuilder.Entity("Dragza.Domain.Models.UserToken", b =>
                 {
-                    b.HasOne("Dragza.Domain.Models.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany("UserTokens")
                         .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_UserToken_User");
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.ActiveIngredient", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.BalanceAccount", b =>
@@ -1619,11 +1254,6 @@ namespace Dragza.Application.Migrations
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.City", b =>
-                {
-                    b.Navigation("Destricts");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.Coupon", b =>
                 {
                     b.Navigation("CouponApplicabilities");
@@ -1631,25 +1261,9 @@ namespace Dragza.Application.Migrations
                     b.Navigation("CouponUsages");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.Governate", b =>
-                {
-                    b.Navigation("Cities");
-
-                    b.Navigation("Users");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.InvoiceType", b =>
                 {
                     b.Navigation("Invoices");
-                });
-
-            modelBuilder.Entity("Dragza.Domain.Models.MainCategory", b =>
-                {
-                    b.Navigation("Categories");
-
-                    b.Navigation("ProductPrices");
-
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("Dragza.Domain.Models.Order", b =>
@@ -1685,13 +1299,6 @@ namespace Dragza.Application.Migrations
                     b.Navigation("ReturnedItems");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.Region", b =>
-                {
-                    b.Navigation("Governates");
-
-                    b.Navigation("Users");
-                });
-
             modelBuilder.Entity("Dragza.Domain.Models.ReturnOrder", b =>
                 {
                     b.Navigation("ReturnedItems");
@@ -1707,29 +1314,13 @@ namespace Dragza.Application.Migrations
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Dragza.Domain.Models.User", b =>
+            modelBuilder.Entity("User", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("BalanceAccounts");
 
-                    b.Navigation("CouponUsages");
-
-                    b.Navigation("OrderInventoryUsers");
-
-                    b.Navigation("OrderItems");
-
-                    b.Navigation("OrderPharmacyUsers");
-
-                    b.Navigation("PharmacyDetailPurchasingManagerNavigations");
-
-                    b.Navigation("PharmacyDetailUsers");
-
-                    b.Navigation("ProductPrices");
-
-                    b.Navigation("ReturnOrderInventoryUsers");
-
-                    b.Navigation("ReturnOrderPharmacyUsers");
-
-                    b.Navigation("ReturnedItems");
+                    b.Navigation("Orders");
 
                     b.Navigation("UserRoles");
 

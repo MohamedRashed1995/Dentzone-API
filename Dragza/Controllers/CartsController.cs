@@ -32,7 +32,7 @@ namespace Dragza.API.Controllers
                 .ThenInclude(i => i.Product)
                     .Include(c => c.Items)
                 .ThenInclude(i => i.ProductPrice)
-                .ThenInclude(a=>a.InventoryUser)
+                .ThenInclude(a=>a.Inventory)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
          
@@ -148,11 +148,12 @@ namespace Dragza.API.Controllers
             double total = 0;
 
             var cart = await _context.Carts
-         .Include(c => c.Items)
-          .ThenInclude(i => i.Product)
-          .Include(c => c.Items)
-          .ThenInclude(i => i.InventoryUser)
-         .FirstOrDefaultAsync(c => c.UserId == request.UserId);
+                .Include(c => c.Items)
+                .ThenInclude(i => i.Product)
+                .Include(c => c.Items)
+                .ThenInclude(i => i.InventoryUser)
+                .FirstOrDefaultAsync(c => c.UserId == request.UserId);
+            
             var porductpriceId = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId && a.ProductId == request.ProductId).FirstOrDefault().Id;
             var porductprice = _context.ProductPrices.Where(a => a.InventoryUserId == request.InventoryId && a.ProductId == request.ProductId).FirstOrDefault();
 
@@ -160,10 +161,10 @@ namespace Dragza.API.Controllers
                 return NotFound(new { message = "Cart not found." });
 
             var item = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId&&i.InventoryUserId==request.InventoryId);
+            
             if (item == null)
                 return NotFound(new { message = "Item not found in cart." });
 
-          
             if (request.Quantity <= 0)
             {
                 cart.Items.Remove(item);

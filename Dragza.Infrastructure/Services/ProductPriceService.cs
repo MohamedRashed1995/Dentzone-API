@@ -16,7 +16,9 @@ namespace Dragza.Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-
+        private readonly string _baseProductUrl = "http://dentzone.runasp.net/Uploads/products/";
+        private readonly string _baseCategoryUrl = "http://dentzone.runasp.net/Uploads/categories/";
+        
         public ProductPriceService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
@@ -38,7 +40,6 @@ namespace Dragza.Infrastructure.Services
                 productPrice.PurchasePrice = dto.PurchasePrice;
                 productPrice.SalesPrice = dto.SalesPrice;
                 productPrice.StockQuantity = dto.StockQuantity;
-
                 _unitOfWork.ProductPriceRepository.Update(productPrice);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -49,7 +50,7 @@ namespace Dragza.Infrastructure.Services
             price.Id = Guid.NewGuid();
             price.CreationDate = DateTime.UtcNow;
             price.InventoryUserId = userId;
-
+            
             await _unitOfWork.ProductPriceRepository.AddAsync(price);
             await _unitOfWork.SaveChangesAsync();
 
@@ -81,17 +82,32 @@ namespace Dragza.Infrastructure.Services
                 throw new Exception($"Category with ID {categoryId} not found");
 
             var prices = await _unitOfWork.ProductPriceRepository.GetPricesWithDetailsByCategory(categoryId);
-            return _mapper.Map<IEnumerable<ProductPriceDetailsDto>>(prices);
+
+            var mapped = _mapper.Map<IEnumerable<ProductPriceDetailsDto>>(
+                prices, opts => { 
+                    opts.Items["BaseUrl"] = _baseProductUrl;
+                    opts.Items["BaseCategoryUrl"] = _baseCategoryUrl;
+                }
+            );
+
+            return mapped;
         }
 
         public async Task<IEnumerable<ProductPriceDetailsDto>> GetPricesByProductAsync(Guid productId)
         {
             var product = await _unitOfWork.ProductRepository.GetByIdAsync(productId);
-            if (product == null || product.IsDeleted == true)
+            if (product == null)
                 throw new Exception($"Product with ID {productId} not found");
 
             var prices = await _unitOfWork.ProductPriceRepository.GetPricesByProduct(productId);
-            return _mapper.Map<IEnumerable<ProductPriceDetailsDto>>(prices);
+
+            var pricesDto = _mapper.Map<IEnumerable<ProductPriceDetailsDto>>(prices, opt =>
+            {
+                opt.Items["BaseUrl"] = _baseProductUrl;
+                opt.Items["BaseCategoryUrl"] = _baseCategoryUrl;
+            });
+
+            return pricesDto;
         }
 
         public async Task<IEnumerable<InventoryUserPriceDetailsDto>> GetPricesByInventoryUserAsync(Guid userId)

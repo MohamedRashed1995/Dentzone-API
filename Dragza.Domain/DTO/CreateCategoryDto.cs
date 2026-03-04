@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,9 +12,8 @@ namespace Dragza.Domain.DTO
         public string Name { get; set; }
         public string Pref { get; set; }
         public string Description { get; set; }
-        public Guid? MainCategoryId { get; set; }
         public string? ArabicName { get; set; }
-
+        public IFormFile? ImageFile { get; set; }
 
     }
 }

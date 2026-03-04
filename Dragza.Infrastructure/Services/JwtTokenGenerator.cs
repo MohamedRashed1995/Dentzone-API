@@ -28,7 +28,6 @@ namespace Dragza.Infrastructure.Services
     {
         new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
         new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-        new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty)
     };
 
             // Handle multiple roles safely
@@ -44,7 +43,7 @@ namespace Dragza.Infrastructure.Services
                 audience: _jwtSettings["Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddDays(30),  /* DateTime.UtcNow.AddMinutes(Convert.ToInt32(_jwtSettings["ExpiryMinutes"])),*/
-                signingCredentials: credentials
+                signingCredentials: credentials 
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);

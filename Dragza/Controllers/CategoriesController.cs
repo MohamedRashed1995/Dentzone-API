@@ -24,13 +24,13 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetAll(int lang)
         {
             var categories = await _categoryService.GetAllCategoriesAsync();
-            if (lang == 0) // Assuming 0 is for Arabic
-            {
-                foreach (var category in categories)
-                {
-                    category.Name = category.ArabicName ; // Simulating language change for demonstration
-                }
-            }
+            //if (lang == 0) // Assuming 0 is for Arabic
+            //{
+            //    //foreach (var category in categories)
+            //    {
+            //        category.Name = category.ArabicName ; // Simulating language change for demonstration
+            //    }
+            //}
             return Ok(categories);
         }
 
@@ -38,16 +38,16 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetById(Guid id, int lang)
         {
             var category = await _categoryService.GetCategoryByIdAsync(id);
-            if (lang == 0) // Assuming 0 is for Arabic
-            {
-                category.Name = category.ArabicName; // Simulating language change for demonstration
-            }
+            //if (lang == 0) // Assuming 0 is for Arabic
+            //{
+            //    category.Name = category.ArabicName; // Simulating language change for demonstration
+            //}
             return Ok(category);
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
+        public async Task<IActionResult> Create([FromForm] CreateCategoryDto dto)
         {
             var createdCategory = await _categoryService.CreateCategoryAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = createdCategory.Id }, createdCategory);
@@ -56,7 +56,7 @@ namespace Dragza.API.Controllers
         [HttpPut("{id}")]
         //[Authorize]
 
-        public async Task<IActionResult> Update(Guid id, [FromBody] CreateCategoryDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] CreateCategoryDto dto)
         {
             await _categoryService.UpdateCategoryAsync(id, dto);
             return NoContent();

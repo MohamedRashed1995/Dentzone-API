@@ -56,7 +56,7 @@ public class InvoiceService : IInvoiceService
             OrderId = order.Id,
             InvoiceDate = DateTime.UtcNow,
             TotalAmount = order.TotalAmount,
-            PharmacyUserId = order.PharmacyUserId,
+            UserId = order.UserId,
             InvoiceTypeId = invoiceType.Id
         };
 

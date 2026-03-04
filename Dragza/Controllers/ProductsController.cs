@@ -59,10 +59,10 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetProduct(Guid id , int lang)
         {
             var product = await _productService.GetProductByIdAsync(id);
-            if(lang == 0)
-            {
-                product.Name = product.ArabicName; // Simulating language change for demonstration
-            }
+            //if(lang == 0)
+            //{
+            //    product.Name = product.ArabicName; // Simulating language change for demonstration
+            //}
             return Ok(product);
         }
 
@@ -70,24 +70,19 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetAllProducts([FromQuery] int lang,[FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
         {
 			var products = await _productService.GetAllProductsAsync(includeDeleted, search,page,size);
-			if (lang == 0) // Assuming 0 is for Arabic
-			{
-			    foreach (var product in products)
-			    {
-			        product.Name = product.ArabicName ; // Simulating language change for demonstration
-			    }
-			}
+			//if (lang == 0) // Assuming 0 is for Arabic
+			//{
+			//    foreach (var product in products)
+			//    {
+			//        product.Name = product.ArabicName ; // Simulating language change for demonstration
+			//    }
+			//}
 			return Ok(products);
 
 			
 		}
         [HttpGet("GetProducts")]
-        public async Task<IActionResult> GetAllProductss(
-    [FromQuery] int lang,
-    [FromQuery] bool includeDeleted = false,
-    [FromQuery] string search = null,
-    int page = 1,
-    int size = 10)
+        public async Task<IActionResult> GetAllProductss([FromQuery] int lang,[FromQuery] bool includeDeleted = false,[FromQuery] string search = null,int page = 1,int size = 10)
         {
 
             var PDS = await _unitOfWork.ProductRepository.GetAllAsync();
@@ -154,15 +149,15 @@ namespace Dragza.API.Controllers
             _logger.LogInformation("GetAllProducts executed in {ElapsedMilliseconds} ms", stopWatch.ElapsedMilliseconds);
             return Ok(cachedResult);
         }
-        [HttpGet("AllProducts")]
-        public async Task<IActionResult> GetAllProduct(string search)
-        {
-            var products = await _productService.GetProductsAsync(search);
+        //[HttpGet("AllProducts")]
+        //public async Task<IActionResult> GetAllProduct(string search)
+        //{
+        //    var products = await _productService.GetProductsAsync(search);
           
-            return Ok(products);
+        //    return Ok(products);
 
 
-        }
+        //}
 
 
         [HttpGet("product-prices-with-data")]
@@ -223,19 +218,19 @@ namespace Dragza.API.Controllers
             return NoContent();
         }
 
-        [HttpGet("by-ingredient/{activeIngredientId}")]
-        public async Task<IActionResult> GetProductsByActiveIngredient(Guid activeIngredientId)
-        {
-            try
-            {
-                var products = await _productService.GetProductsByActiveIngredientAsync(activeIngredientId);
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
-        }
+        //[HttpGet("by-ingredient/{activeIngredientId}")]
+        //public async Task<IActionResult> GetProductsByActiveIngredient(Guid activeIngredientId)
+        //{
+        //    try
+        //    {
+        //        var products = await _productService.GetProductsByActiveIngredientAsync(activeIngredientId);
+        //        return Ok(products);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return NotFound(ex.Message);
+        //    }
+        //}
 
         [HttpGet("best-sellers")]
         public async Task<IActionResult> GetBestSellingProducts([FromQuery] int top = 10)
@@ -550,7 +545,7 @@ namespace Dragza.API.Controllers
                     var ActiveName = row.Cell(5).GetString().Trim();
                     var categoryName = row.Cell(6).GetString().Trim();
                     var category = await _categoryService.GetCategoryByNameAsync(categoryName);
-                    var active = await _unitOfWork.ActiveIngredientRepository.GetByName(ActiveName);
+                    //var active = await _unitOfWork.ActiveIngredientRepository.GetByName(ActiveName);
 
 
                     productDtos.Add(new ProductAddDto
@@ -561,7 +556,7 @@ namespace Dragza.API.Controllers
                         Description = description,
                         Preef = preef,
                         CategoryId = category.Id,
-                        ActiveIngerdientId = active.Id,
+                        //ActiveIngerdientId = active.Id,
 
                     });
 

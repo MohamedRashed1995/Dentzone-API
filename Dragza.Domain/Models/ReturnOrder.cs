@@ -9,7 +9,7 @@ public partial class ReturnOrder
 
     public Guid OrderId { get; set; }
 
-    public Guid PharmacyUserId { get; set; }
+    public Guid UserId { get; set; }
 
     public DateTime RequestDate { get; set; }
 
@@ -29,7 +29,7 @@ public partial class ReturnOrder
 
     public virtual Order Order { get; set; } = null!;
 
-    public virtual User PharmacyUser { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
     public virtual ICollection<ReturnedItem> ReturnedItems { get; set; } = new List<ReturnedItem>();
 }

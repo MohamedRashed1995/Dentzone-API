@@ -28,15 +28,15 @@ namespace Dragaza.Infrastructure.Repositories
                     .ThenInclude(ri => ri.ProductPrice)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.Reason)
-                .Include(ro => ro.PharmacyUser)
+                .Include(ro => ro.UserId)
                 .Include(ro => ro.InventoryUser)
                 .FirstOrDefaultAsync(ro => ro.Id == id);
         }
 
-        public async Task<IEnumerable<ReturnOrder>> GetByPharmacyAsync(Guid pharmacyId)
+        public async Task<IEnumerable<ReturnOrder>> GetByPharmacyAsync(Guid UserId)
         {
             return await _context.ReturnOrders
-                .Where(ro => ro.PharmacyUserId == pharmacyId && ro.InventoryUserId == null)
+                .Where(ro => ro.UserId == UserId && ro.InventoryUserId == null)
                 .Include(ro => ro.ReturnedItems)
                 .ToListAsync();
         }
@@ -45,7 +45,7 @@ namespace Dragaza.Infrastructure.Repositories
         {
             return await _context.ReturnOrders
                 .Include(a=>a.InventoryUser)
-              .Include(a=>a.PharmacyUser)
+              .Include(a=>a.UserId)
                 .Include(ro => ro.ReturnedItems)
                   .Where(ro => ro.InventoryUserId == inventoryUserId)
                 .ToListAsync();
@@ -57,7 +57,7 @@ namespace Dragaza.Infrastructure.Repositories
 
 			return await _context.ReturnOrders
                 .Include(ro => ro.Order)
-				.Include(ro => ro.PharmacyUser)
+				.Include(ro => ro.User)
 				.Include(ro => ro.InventoryUser)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.Product)
@@ -74,7 +74,7 @@ namespace Dragaza.Infrastructure.Repositories
         {
             return await _context.ReturnOrders
                 .Include(ro => ro.Order)
-                .Include(ro => ro.PharmacyUser)
+                .Include(ro => ro.User)
                 .Include(ro => ro.InventoryUser)
                 .Include(ro => ro.ReturnedItems)
                     .ThenInclude(ri => ri.Product)

@@ -7,8 +7,8 @@ public partial class Order
 {
     public Guid Id { get; set; }
 
-    public Guid PharmacyUserId { get; set; }
-
+    public User User { get; set; }
+    public Guid UserId { get; set; }
     public DateTime OrderDate { get; set; }
 
     public int Status { get; set; }
@@ -39,13 +39,11 @@ public partial class Order
 
     public virtual BalanceAccount? CreditAccount { get; set; }
 
-    public virtual User? InventoryUser { get; set; }
+    //public virtual User? InventoryUser { get; set; }
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-
-    public virtual User PharmacyUser { get; set; } = null!;
 
     public virtual ICollection<ReturnOrder> ReturnOrders { get; set; } = new List<ReturnOrder>();
 

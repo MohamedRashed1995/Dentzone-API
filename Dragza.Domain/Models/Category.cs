@@ -18,13 +18,8 @@ public partial class Category
     public DateTime? UpdatedAt { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public Guid? MainCategoryId { get; set; }
-
+    public string? ImageName { get; set; }  
     public string? ArabicName { get; set; }
-
-    public virtual MainCategory? MainCategory { get; set; }
-
     public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();

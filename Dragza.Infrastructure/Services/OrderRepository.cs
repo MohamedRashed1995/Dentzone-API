@@ -43,13 +43,13 @@ namespace Dragza.Infrastructure.Services
                     foreach (var group in groups)
                     {
                         var warehouseId = group.Key;
-                        var checkMinOrder = _context.Users.Where(a=>a.Id==warehouseId).FirstOrDefault().MinOrder;
+                        //var checkMinOrder = _context.Users.Where(a=>a.Id==warehouseId).FirstOrDefault().MinOrder;
                         var totalAmount = (decimal)group.Sum(i => i.Quantity *(i.ProductPrice.SalesPrice-(i.ProductPrice.SalesPrice*i.ProductPrice.DiscountRate/100)));
-                        if (totalAmount >= checkMinOrder) {
+                        if (totalAmount >= 0) {
                             var order = new Order
                             {
                                 Id = Guid.NewGuid(),
-                                PharmacyUserId = Guid.Parse(userId),
+                                //PharmacyUserId = Guid.Parse(userId),
                                 InventoryUserId = warehouseId,
                                 OrderDate = DateTime.Now,
                                 Status = (int)OrderStatus.Pending,
@@ -106,7 +106,7 @@ namespace Dragza.Infrastructure.Services
                         {
 
                             failedInventory.Add(
-                                   $"المخزن {cart.Items.Where(a=>a.InventoryUserId==warehouseId).FirstOrDefault().InventoryUser.BussinesName}: الحد الأدنى {checkMinOrder} — المجموع {totalAmount}");
+                                   $"المخزن {cart.Items.Where(a=>a.InventoryUserId==warehouseId).FirstOrDefault()}: الحد الأدنى  — المجموع {totalAmount}");
                             continue;  // كمل على باقي المخازن
 
 
@@ -167,13 +167,13 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.Orders
                 .Include(a=>a.OrderItems)
-                .Include(u => u.InventoryUser)
-                .Include(p => p.PharmacyUser)
+                .Include(u => u.InventoryUserId)
+                //.Include(p => p.PharmacyUser)
                 .Include(cu => cu.CouponUsages)
                 .ThenInclude(c=> c.Coupon)
                 .Include(o => o.OrderItems)
                 .ThenInclude(i => i.ProductPrice)
-                .ThenInclude(n => n.InventoryUser)
+                .ThenInclude(n => n.Inventory)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
              
@@ -184,8 +184,8 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.Orders
                 .Where(o => o.Status >= 5) // Adjust status codes as per your business logic
-                 .Include(u => u.InventoryUser)
-                .Include(p => p.PharmacyUser)
+                 .Include(u => u.InventoryUserId)
+                //.Include(p => p.PharmacyUser)
                 .Include(cu => cu.CouponUsages)
                 .ThenInclude(c => c.Coupon)
                 .Include(o => o.OrderItems)

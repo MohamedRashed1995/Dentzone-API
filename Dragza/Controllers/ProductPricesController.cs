@@ -49,7 +49,7 @@ namespace Dragza.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Inventory")]
+        [Authorize]
         public async Task<IActionResult> CreatePrice([FromBody] CreateProductPriceDto dto)
         {
             var userId = GetCurrentUserId();

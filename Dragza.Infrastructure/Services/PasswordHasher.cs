@@ -1,11 +1,11 @@
 ﻿using Dragza.Domain.DTO;
 using System.Text;
 using System.Security.Cryptography;
-
+using Dragza.Application.Interface;
 
 namespace Dragza.Infrastructure.Services
 {
-    public class PasswordHasher
+    public class PasswordHasher : IPasswordHasher
     {
         public string HashPassword(string password)
         {

@@ -13,5 +13,6 @@ namespace Dragza.Domain.DTO
         public decimal PurchasePrice { get; set; }
         public decimal SalesPrice { get; set; }
         public int StockQuantity { get; set; }
+        public decimal DiscountRate { get; set; }
     }
 }

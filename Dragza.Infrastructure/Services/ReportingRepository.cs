@@ -21,9 +21,9 @@ public class ReportingRepository : IReportingRepository
         var query = _context.Invoices
         .Include(i => i.InvoiceType)
         .Include(i => i.Order)
-            .ThenInclude(o => o.PharmacyUser)
+            .ThenInclude(o => o.User)
         .Include(i => i.Order)
-            .ThenInclude(o => o.InventoryUser)  // Added this include
+            .ThenInclude(o => o.InventoryUserId)  // Added this include
         .AsQueryable();
 
         query = ApplyCommonFilters(query, filter);
@@ -39,8 +39,8 @@ public class ReportingRepository : IReportingRepository
     public async Task<IEnumerable<Order>> GetOrdersReportAsync(ReportFilterDto filter)
     {
         var query = _context.Orders
-         .Include(o => o.PharmacyUser)
-         .Include(o => o.InventoryUser)  // Added this include
+         .Include(o => o.User)
+         .Include(o => o.InventoryUserId)  // Added this include
          .Include(o => o.OrderItems)
          .Include(o => o.Invoices)
          .AsQueryable();
@@ -169,17 +169,17 @@ public class ReportingRepository : IReportingRepository
             }
         }
 
-        if (filter.PharmacyUserId.HasValue)
+        if (filter.UserId.HasValue)
         {
             if (typeof(T) == typeof(Invoice))
             {
                 query = (IQueryable<T>)((IQueryable<Invoice>)query)
-                    .Where(i => i.PharmacyUserId == filter.PharmacyUserId.Value);
+                    .Where(i => i.UserId == filter.UserId.Value);
             }
             else if (typeof(T) == typeof(Order))
             {
                 query = (IQueryable<T>)((IQueryable<Order>)query)
-                    .Where(o => o.PharmacyUserId == filter.PharmacyUserId.Value);
+                    .Where(o => o.UserId == filter.UserId.Value);
             }
         }
 
@@ -197,19 +197,7 @@ public class ReportingRepository : IReportingRepository
             }
         }
 
-        if (filter.RegionId.HasValue)
-        {
-            if (typeof(T) == typeof(Invoice))
-            {
-                query = (IQueryable<T>)((IQueryable<Invoice>)query)
-                    .Where(i => i.Order.PharmacyUser.RegionId == filter.RegionId.Value);
-            }
-            else if (typeof(T) == typeof(Order))
-            {
-                query = (IQueryable<T>)((IQueryable<Order>)query)
-                    .Where(o => o.PharmacyUser.RegionId == filter.RegionId.Value);
-            }
-        }
+        
 
         return query;
     }

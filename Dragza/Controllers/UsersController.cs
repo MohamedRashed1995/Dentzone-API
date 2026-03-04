@@ -5,6 +5,7 @@ using Dragza.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -16,43 +17,65 @@ namespace Dragza.API.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILogger<UsersController> _logger;
-
-        public UsersController(IUserService userService , ILogger<UsersController> logger)
+        private readonly IUserRepository _userRepository;
+        public UsersController(IUserService userService , ILogger<UsersController> logger, IUserRepository userRepository)
         {
             _userService = userService;
             _logger = logger;
+            _userRepository = userRepository;
         }
 
         [HttpPost("register")]
-
         public async Task<IActionResult> Register([FromForm] CreateUserDto createUserDto)
         {
-            _logger.LogInformation("Register object :: {0}" ,JsonConvert.SerializeObject(createUserDto));
-
-            await _userService.RegisterUserAsync(createUserDto);
-            var loginDto = new LoginDto
+            try
             {
-                UsernameOrEmail = createUserDto.UserName,
-                Password = createUserDto.Password
-            };
-            var result = await _userService.LoginAsync(loginDto);
+                _logger.LogInformation("Register object received: {0}", JsonConvert.SerializeObject(createUserDto));
 
-            return Ok(result);
+                // نسجل المستخدم
+                var userResponse = await _userService.RegisterUserAsync(createUserDto);
+
+                // نرجع response بتاع register مش login
+                return Ok(userResponse);
+            }
+            catch (ApplicationException appEx)
+            {
+                _logger.LogWarning(appEx, "Application exception during registration");
+                return BadRequest(new { message = appEx.Message });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error during registration");
+                return StatusCode(500, new { message = "Database error: " + dbEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error during registration");
+                return StatusCode(500, new { message = "Unexpected error: " + ex.Message });
+            }
         }
 
+
+
+        
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromForm] UpdateUserDto updateUserDto)
         {
-
-            var result = await _userService.UpdateUserAsync(id, updateUserDto);
-
-            if (result == null)
+            try
             {
-                return NotFound();
-            }
+                var result = await _userService.UpdateUserAsync(id, updateUserDto);
 
-            return Ok(result);
+                if (result == null)
+                    return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
@@ -60,7 +83,7 @@ namespace Dragza.API.Controllers
             var result = await _userService.LoginAsync(loginDto);
             if (result.HasDetails == false)
             {
-                return Ok(
+                return NotFound(
 
                     new
                     {
@@ -88,28 +111,22 @@ namespace Dragza.API.Controllers
             return Ok(users);
         }
 
-        [HttpPost("delete-user")]
+        [HttpGet("by-role/{roleId}")]
+        public async Task<IActionResult> GetUserbyrole (Guid roleId)
+        {
+            var users = await _userRepository.GetUsersByRoleWithPharmacyAsync(roleId);
+            return Ok(users);
+        }
+
+
+        [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUser([FromBody] Guid Id)
         {
-            var result = await _userService.DeleteUser(Id
-                );
+            var result = await _userService.DeleteUser(Id);
             return Ok(result);
         }
 
-        [HttpGet("by-role/{roleId}")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetUsersByRoleWithPharmacy(Guid roleId)
-        {
-            try
-            {
-                var users = await _userService.GetUsersByRoleWithPharmacyAsync(roleId);
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
-        }
+        
 
         [HttpPost("deActive-user")]
         public async Task<IActionResult> DeActivatUser([FromBody] Guid Id)
@@ -143,14 +160,19 @@ namespace Dragza.API.Controllers
                         });
                     }
                 }
+                else
+                {
+                    return BadRequest(ModelState);
+                }
             }
             catch (Exception ex)
             {
-                return BadRequest();
-                throw;
+                return StatusCode(500, new
+                {
+                    message = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
             }
-            return Ok();
         }
-
     }
 }

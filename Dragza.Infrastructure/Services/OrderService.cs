@@ -29,19 +29,19 @@ namespace Dragza.Infrastructure.Services
             _logger = logger;
             _repository = repository;
         }
-        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto, Guid pharmacyUserId)
+        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto orderDto, Guid UserId)
         {
             try
             {
 
                 _logger.LogInformation("CreateOrderAsync");
                 // Validate user is a pharmacy
-                var user = await _unitOfWork.UserRepository.GetByIdAsync(pharmacyUserId);
-                if (user == null || user.IsPharmacy != true)
-                {
-                    _logger.LogError("CreateOrderAsync :: Only pharmacy users can create orders");
-                    throw new InvalidOperationException("Only pharmacy users can create orders");
-                }
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(UserId);
+                //if (user == null || user.IsPharmacy != true)
+                //{
+                //    _logger.LogError("CreateOrderAsync :: Only pharmacy users can create orders");
+                //    throw new InvalidOperationException("Only pharmacy users can create orders");
+                //}
 
                 // Calculate total amount
                 decimal totalAmount = orderDto.Items.Sum(item => item.Quantity * item.UnitPrice);
@@ -69,7 +69,7 @@ namespace Dragza.Infrastructure.Services
 
                     case PaymentMethod.Credit:
                         creditAmount = totalAmount;
-                        var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                        var creditAccount = (await _balanceService.GetUserBalances(UserId)).CreditAccount;
                         //if (!await _balanceService.HasSufficientBalance(creditAccount.Id, -creditAmount))
                         //{
                         //    throw new InvalidOperationException("Insufficient credit balance");
@@ -85,7 +85,7 @@ namespace Dragza.Infrastructure.Services
                         creditAmount = orderDto.CreditAmount.Value;
                         cashAmount = totalAmount - creditAmount;
 
-                        var userCreditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                        var userCreditAccount = (await _balanceService.GetUserBalances(UserId)).CreditAccount;
                         //if (!await _balanceService.HasSufficientBalance(userCreditAccount.Id, -creditAmount))
                         //{
                         //    throw new InvalidOperationException("Insufficient credit balance");
@@ -99,7 +99,7 @@ namespace Dragza.Infrastructure.Services
                 var order = new Order
                 {
                     Id = Guid.NewGuid(),
-                    PharmacyUserId = pharmacyUserId,
+                    UserId = UserId,
                     OrderDate = DateTime.UtcNow,
                     Status = (int)OrderStatus.Pending,
                     TotalAmount = totalAmount,
@@ -107,6 +107,7 @@ namespace Dragza.Infrastructure.Services
                     CashPaid = cashAmount,
                     CreditAccountId = creditAccountId,
                     OrderNumber = uniqueNum.ToString(),
+                    
                 };
 
                 // Add order items
@@ -132,12 +133,12 @@ namespace Dragza.Infrastructure.Services
                     await _balanceService.CreateTransaction(
                         creditAccountId.Value,
                         -creditAmount,
-                        pharmacyUserId,
+                        UserId,
                         TransactionType.Payment,
                         $"Order payment #{order.Id}",
                         order.Id);
                 }
-              await CreateOrdersByInventoryAsync(orderDto, pharmacyUserId , uniqueNum);
+              await CreateOrdersByInventoryAsync(orderDto, UserId , uniqueNum);
                 return _mapper.Map<OrderDto>(order);
 
             }
@@ -231,9 +232,9 @@ namespace Dragza.Infrastructure.Services
         public async Task<List<OrderDto>> GetUserOrdersAsync(Guid userId, int? status)
         {
             var orders = await _unitOfWork.OrderRepository.GetAllAsync(
-                o => o.PharmacyUserId == userId,
+                o => o.UserId == userId,
                 include: q => 
-                q.Include(a=>a.InventoryUser)
+                q.Include(a=>a.InventoryUserId)
                 .Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .Include(o => o.OrderItems)
@@ -252,9 +253,9 @@ namespace Dragza.Infrastructure.Services
                                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .ThenInclude(oi => oi.ProductPrices)
-                              .ThenInclude(oi => oi.InventoryUser)
-                              .Include(o => o.InventoryUser)
-                              .Include(o => o.PharmacyUser)
+                              .ThenInclude(oi => oi.Inventory)
+                              .Include(o => o.InventoryUserId)
+                              .Include(o => o.User)
             //.ThenInclude(oi => oi.ProductPrice)
             );
             return _mapper.Map<List<OrderDto>>(orders);
@@ -266,8 +267,8 @@ namespace Dragza.Infrastructure.Services
                 o => o.InventoryUserId == vendorId,
                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
-                              .Include(u => u.InventoryUser)
-                              .Include(u => u.PharmacyUser)
+                              .Include(u => u.InventoryUserId)
+                              .Include(u => u.User)
                               .Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.ProductPrice)
             );
@@ -317,7 +318,7 @@ namespace Dragza.Infrastructure.Services
                 var newOrder = new Order
                 {
                     Id = Guid.NewGuid(),
-                    PharmacyUserId = originalOrder.PharmacyUserId,
+                    UserId = originalOrder.UserId,
                     OrderDate = DateTime.UtcNow,
                     Status = (int)OrderStatus.Pending,
                     TotalAmount = transferAmount,
@@ -441,7 +442,7 @@ namespace Dragza.Infrastructure.Services
                     Id = Guid.NewGuid(),
                     Title = "Order Status Updated",
                     Status= (int)status,
-                    UserId = order.PharmacyUserId,
+                    UserId = order.UserId,
                     Message = $"Your order #{order.OrderNumber} status has been updated to {status}.",
                     CreatedAt = DateTime.UtcNow,
 
@@ -528,7 +529,7 @@ namespace Dragza.Infrastructure.Services
                 Id = Guid.NewGuid(),
                 Title = "Order Status Updated",
                 Status= (int)OrderStatus.Completed,
-                UserId = order.PharmacyUserId,
+                UserId = order.UserId,
                 Message = $"Your order #{order.OrderNumber} status has been updated to {OrderStatus.Completed}.",
                 CreatedAt = DateTime.UtcNow,
 
@@ -547,8 +548,8 @@ namespace Dragza.Infrastructure.Services
             {
                 // Validate user
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(pharmacyUserId);
-                if (user == null || user.IsPharmacy != true)
-                    throw new InvalidOperationException("Only pharmacy users can create orders");
+                //if (user == null || user.IsPharmacy != true)
+                //    throw new InvalidOperationException("Only pharmacy users can create orders");
 
                 // Get product prices to determine inventory
                 var productPriceIds = orderDto.Items.Select(i => i.ProductPriceId).Distinct().ToList();
@@ -702,7 +703,7 @@ namespace Dragza.Infrastructure.Services
 
         private async Task<OrderDto> CreateInventoryOrder(
             CreateOrderDto orderDto,
-            Guid pharmacyUserId,
+            Guid UserId,
             Guid? inventoryId,
             List<OrderItemDto> items,
             decimal groupTotalAfterCoupon,
@@ -715,7 +716,7 @@ namespace Dragza.Infrastructure.Services
             Guid? creditAccountId = null;
             if (groupCredit > 0)
             {
-                var creditAccount = (await _balanceService.GetUserBalances(pharmacyUserId)).CreditAccount;
+                var creditAccount = (await _balanceService.GetUserBalances(UserId)).CreditAccount;
                 creditAccountId = creditAccount?.Id;
             }
 
@@ -726,7 +727,7 @@ namespace Dragza.Infrastructure.Services
             var order = new Order
             {
                 Id = Guid.NewGuid(),
-                PharmacyUserId = pharmacyUserId,
+                UserId = UserId,
                 InventoryUserId = inventoryId,
                 OrderDate = DateTime.UtcNow,
                 Status = (int)OrderStatus.Pending,
@@ -775,8 +776,8 @@ namespace Dragza.Infrastructure.Services
                             o => o.OrderNumber == orderNumber,
                             include: q => q.Include(o => o.OrderItems)
                                           .ThenInclude(oi => oi.Product)
-                                          .Include(u => u.InventoryUser)
-                                          .Include(u => u.PharmacyUser)
+                                          .Include(u => u.InventoryUserId)
+                                          .Include(u => u.User)
                                           .Include(o => o.OrderItems)
                                           .ThenInclude(oi => oi.ProductPrice)
                         );

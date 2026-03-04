@@ -5,11 +5,14 @@ using Dragza.Application.Interface;
 using Dragza.Application.Mapping;
 using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
+using Dragza.Infrastructure.Data;
 using Dragza.Infrastructure.Helper;
 using Dragza.Infrastructure.Services;
+using Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -20,41 +23,53 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
 
+//builder.Services.AddDbContext<DragzaContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<DragzaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            //maxRetryCount: 5, // عدد المحاولات
+            //maxRetryDelay: TimeSpan.FromSeconds(10), // وقت الانتظار بين المحاولات
+            errorNumbersToAdd: null // لو عايز تضيف أرقام Errors مخصوص
+        )
+    )
+);
+
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped< PasswordHasher>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IUserService, UserService>();
-
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductPriceService, ProductPriceService>();
-
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductPriceRepository, ProductPriceRepository>();
-
+//builder.Services.AddScoped<, UserRepository>();
 builder.Services.AddScoped<IReturnOrderService, ReturnOrderService>();
 builder.Services.AddScoped<IReturnOrderRepository, ReturnOrderRepository>();
 builder.Services.AddScoped<IReturnedItemRepository, ReturnedItemRepository>();
 builder.Services.AddScoped<IReturnReasonRepository, ReturnReasonRepository>();
-builder.Services.AddScoped<IPharmacyDetailRepository, PharmacyDetailRepository>();
-builder.Services.AddScoped<IActiveIngredientRepository, ActiveIngredientRepository>();
+//builder.Services.AddScoped<IPharmacyDetailRepository, PharmacyDetailRepository>();
+//builder.Services.AddScoped<IActiveIngredientRepository, ActiveIngredientRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IBalanceAccountRepository, BalanceAccountRepository>();
 builder.Services.AddScoped<IBalanceTransactionRepository, BalanceTransactionRepository>();
 builder.Services.AddScoped<IBalanceService, BalanceService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
-builder.Services.AddScoped<IMainCategoryRepository, MainCategoryRepository>();
-builder.Services.AddScoped<IMainCategoryService, MainCategoryService>();
+//builder.Services.AddScoped<IMainCategoryRepository, MainCategoryRepository>();
+//builder.Services.AddScoped<IMainCategoryService, MainCategoryService>();
 builder.Services.AddScoped<IReportingRepository, ReportingRepository>();
 builder.Services.AddScoped<IBalanceReportingRepository, BalanceReportingRepository>();
-builder.Services.AddScoped<IGovernateRepository, GovernateRepository>();
-builder.Services.AddScoped<IGovernateService, GovernateService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IBalanceReportingService, BalanceReportingService>();
 builder.Services.AddScoped<IReturnReasonService, ReturnReasonService>();
@@ -109,8 +124,6 @@ builder.Services.Configure<Dragza.Domain.DTO.FileSettings>(options =>
 
 
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
-builder.Services.AddScoped<IRegionService, RegionService>();
-builder.Services.AddScoped<IRegionRepository, RegionRepository>();
 
 // Add AutoMapper with dependency injection for resolvers
 builder.Services.AddAutoMapper(cfg =>
@@ -163,7 +176,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Dragza API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Dent Zone API", Version = "v1" });
 
     // Optional: Add JWT Bearer authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -193,23 +206,47 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<DragzaContext>();
+
+    await SeedData.SeedRolesAsync(context);
+}
+
+
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
+app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dragza API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dent Zone API v1");
     });
 
 //}
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll"); // ✅ Correct place
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+if (!Directory.Exists(uploadsPath))
+    Directory.CreateDirectory(uploadsPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/Uploads"
+});
+
+
 
 app.UseRouting();
 
@@ -217,6 +254,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

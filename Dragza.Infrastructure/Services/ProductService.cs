@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Dragza.Application.Data;
 using Dragza.Application.Interface;
 using Dragza.Domain.DTO;
 using Dragza.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Security.Cryptography;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace Dragza.Infrastructure.Services
 {
@@ -13,61 +16,143 @@ namespace Dragza.Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IFileStorageService _fileStorage;
+        private readonly DragzaContext _context;
+        private readonly string _uploadsFolder;
+        private readonly string _baseUrl = "http://dentzone.runasp.net/Uploads/products/";
+        private readonly string _baseCategoriesUrl = "http://dentzone.runasp.net/Uploads/categories/";
 
 
-        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IFileStorageService fileStorage)
+        public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IFileStorageService fileStorage,DragzaContext context)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _fileStorage = fileStorage;
+            _context = context;
+            _uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "products");
+            if (!Directory.Exists(_uploadsFolder))
+                Directory.CreateDirectory(_uploadsFolder);
         }
 
         public async Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto)
         {
+            string? imageName = null;
+            if (dto.Photo != null)
+            {
+                imageName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Photo.FileName)}";
+                var filePath = Path.Combine(_uploadsFolder, imageName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await dto.Photo.CopyToAsync(stream);
+            }
             var category = await _unitOfWork.CategoryRepository.GetByIdAsync(dto.CategoryId);
             if (category == null) throw new Exception("Category not found");
 
-            if (dto.ActiveIngredientId.HasValue)
-            {
-                var ingredient = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(dto.ActiveIngredientId.Value);
-                if (ingredient == null) throw new Exception("Active ingredient not found");
-            }
-
+            
             var product = _mapper.Map<Product>(dto);
+            
+            
             product.Id = Guid.NewGuid();
             product.ProductCode = GenerateProductCode();
             product.CreatedAt = DateTime.UtcNow;
-            product.ActiveIngerdientId = dto.ActiveIngredientId;
-            if (dto.Photo != null)
-            {
-                product.Image = await _fileStorage.SaveFileAsync(
-                       dto.Photo);
-            }
+
+            product.Image = imageName;
+            //product.Description = dto.Description;
+            //product.Preef = dto.Preef;
+            //product.CategoryId = dto.CategoryId;
+            
+            
             await _unitOfWork.ProductRepository.AddAsync(product);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<ProductResponseDto>(product);
         }
 
+
         public async Task<ProductResponseDto> GetProductByIdAsync(Guid id)
         {
             var product = await _unitOfWork.ProductRepository.GetProductWithDetailsAsync(id);
-            if (product == null || product.IsDeleted == true)
+
+            if (product == null)
                 throw new Exception($"Product with ID {id} not found");
 
-            return _mapper.Map<ProductResponseDto>(product);
+            // تعديل URLs قبل الـ Mapping لتجنب التكرار
+            if (!string.IsNullOrEmpty(product.Image) && !product.Image.StartsWith("http"))
+            {
+                product.Image = $"{_baseUrl}{product.Image}";
+            }
+
+            if (product.Category != null && !string.IsNullOrEmpty(product.Category.ImageName)
+                && !product.Category.ImageName.StartsWith("http"))
+            {
+                product.Category.ImageName = $"{_baseCategoriesUrl}{product.Category.ImageName}";
+            }
+
+            // Mapping بعد تعديل الصور
+            var productDto = _mapper.Map<ProductResponseDto>(product);
+
+            return productDto;
         }
 
-        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted , string search, int page = 1, int size = 10)
+        //public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted , string search, int page = 1, int size = 10)
+        //{
+        //    var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted ,search,page,size);
+        //    return _mapper.Map<List<ProductResponseDto>>(products);
+        //}
+
+        //public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search, int page = 1, int size = 10)
+        //{
+        //    var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted, search, page, size);
+
+        //    // AutoMapper هيملى Inventories صح
+        //    var productDtos = _mapper.Map<List<ProductResponseDto>>(products);
+
+        //    return productDtos;
+        //}
+
+
+        //public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(bool includeDeleted, string search, int page = 1, int size = 10)
+        //{
+        //    var products = await _unitOfWork.ProductRepository
+        //        .GetAllProductsWithDetailsAsync(includeDeleted, search, page, size);
+
+        //    var productDtos = _mapper.Map<List<ProductResponseDto>>(products);
+
+        //    return productDtos;
+        //}
+
+        public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync(
+                bool includeDeleted, string search, int page = 1, int size = 10)
         {
-            var products = await _unitOfWork.ProductRepository.GetAllProductsWithDetailsAsync(includeDeleted ,search,page,size);
-            return _mapper.Map<List<ProductResponseDto>>(products);
+            // جلب المنتجات من الـ Repository
+            var products = await _unitOfWork.ProductRepository
+                .GetAllProductsWithDetailsAsync(includeDeleted, search, page, size);
+
+            // تعديل URLs قبل الـ Mapping لتجنب التكرار
+            products.ForEach(p =>
+            {
+                // Product Image
+                if (!string.IsNullOrEmpty(p.Image) && !p.Image.StartsWith("http"))
+                {
+                    p.Image = $"{_baseUrl}{p.Image}";
+                }
+
+                // Category Image
+                if (p.Category != null && !string.IsNullOrEmpty(p.Category.ImageName)
+                    && !p.Category.ImageName.StartsWith("http"))
+                {
+                    p.Category.ImageName = $"{_baseCategoriesUrl}{p.Category.ImageName}";
+                }
+            });
+
+            // Mapping بعد تعديل الصور
+            var productDtos = _mapper.Map<List<ProductResponseDto>>(products);
+
+            return productDtos;
         }
 
         public async Task<ProductResponseDto> UpdateProductAsync(Guid id, UpdateProductDto dto)
         {
             var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
-            if (product == null || product.IsDeleted == true)
+            if (product == null)
                 throw new Exception($"Product with ID {id} not found");
 
             _mapper.Map(dto, product);
@@ -86,18 +171,18 @@ namespace Dragza.Infrastructure.Services
                 product.CategoryId = dto.CategoryId.Value;
             }
 
-            if (dto.ActiveIngredientId.HasValue)
-            {
-                var ingredient = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(dto.ActiveIngredientId.Value);
-                if (ingredient == null) throw new Exception("Active ingredient not found");
-                product.ActiveIngerdientId = dto.ActiveIngredientId.Value;
-            }
+            //if (dto.ActiveIngredientId.HasValue)
+            //{
+            //    var ingredient = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(dto.ActiveIngredientId.Value);
+            //    if (ingredient == null) throw new Exception("Active ingredient not found");
+            //    product.ActiveIngerdientId = dto.ActiveIngredientId.Value;
+            //}
 
-            if (dto.Photo != null)
-            {
-                product.Image = await _fileStorage.SaveFileAsync(
-                       dto.Photo);
-            }
+            //if (dto.Photo != null)
+            //{
+            //    product.Image = await _fileStorage.SaveFileAsync(
+            //           dto.Photo);
+            //}
             _unitOfWork.ProductRepository.Update(product);
             await _unitOfWork.SaveChangesAsync();
 
@@ -107,39 +192,39 @@ namespace Dragza.Infrastructure.Services
         public async Task SoftDeleteProductAsync(Guid id)
         {
             var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
-            if (product == null || product.IsDeleted == true)
+            if (product == null)
                 throw new Exception($"Product with ID {id} not found");
 
-            product.IsDeleted = true;
-            product.DeletedDate = DateTime.UtcNow;
-
-            _unitOfWork.ProductRepository.Update(product);
+            //product.IsDeleted = true;
+            //product.DeletedDate = DateTime.UtcNow;
+            
+            //update => Delete
+            _unitOfWork.ProductRepository.Delete(product);
             await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task RestoreProductAsync(Guid id)
         {
             var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
-            if (product == null || !product.IsDeleted == true)
+            if (product == null)
                 throw new Exception($"Product with ID {id} not found");
 
-            product.IsDeleted = false;
-            product.DeletedDate = null;
+            
 
             _unitOfWork.ProductRepository.Update(product);
             await _unitOfWork.SaveChangesAsync();
         }
-        public async Task<IEnumerable<ProductResponseDto>> GetProductsByActiveIngredientAsync(Guid activeIngredientId)
-        {
-            var ingredient = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(activeIngredientId);
-            if (ingredient == null)
-            {
-                throw new Exception($"Active ingredient with ID {activeIngredientId} not found");
-            }
+        //public async Task<IEnumerable<ProductResponseDto>> GetProductsByActiveIngredientAsync(Guid activeIngredientId)
+        //{
+        //    var ingredient = await _unitOfWork.ActiveIngredientRepository.GetByIdAsync(activeIngredientId);
+        //    if (ingredient == null)
+        //    {
+        //        throw new Exception($"Active ingredient with ID {activeIngredientId} not found");
+        //    }
 
-            var products = await _unitOfWork.ProductRepository.GetByActiveIngredientAsync(activeIngredientId);
-            return _mapper.Map<IEnumerable<ProductResponseDto>>(products);
-        }
+        //    var products = await _unitOfWork.ProductRepository.GetByActiveIngredientAsync(activeIngredientId);
+        //    return _mapper.Map<IEnumerable<ProductResponseDto>>(products);
+        //}
 
         public async Task<IEnumerable<BestSellerProductDto>> GetBestSellingProductsAsync(int topN = 10)
         {

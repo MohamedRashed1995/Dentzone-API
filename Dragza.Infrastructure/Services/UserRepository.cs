@@ -22,17 +22,12 @@ namespace Dragza.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<User> GetByIdAsync(Guid id)
+        public async Task<User> GetByIdAsync(Guid? id)
         {
             return await _context.Users
-               .Include(s=>s.SubArea)
-                .Include(a=>a.Region)
-                .Include(u => u.BalanceAccounts)
+                //.Include(u => u.BalanceAccounts)
                 .Include(u => u.UserRoles)
-                 .ThenInclude(ur => ur.Role)
-                .Include(u=>u.PharmacyDetailUsers)
-                
-               
+                .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -41,13 +36,13 @@ namespace Dragza.Infrastructure.Services
             return await _context.Users
                 .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.UserName == usernameOrEmail || u.Email == usernameOrEmail);
+                .FirstOrDefaultAsync(u => u.Email == usernameOrEmail);
         }
 
-        public Task<IEnumerable<User>> GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
+        //public Task<IEnumerable<User>> GetAllAsync()
+        //{
+        //    throw new NotImplementedException();
+        //}
         public async Task<IEnumerable<User>> GetAllAsync(
           Expression<Func<User, bool>> filter = null,
           Func<IQueryable<User>, IIncludableQueryable<User, object>> include = null)
@@ -91,17 +86,15 @@ namespace Dragza.Infrastructure.Services
         {
             _context.Users.Remove(entity);
         }
-        // Implement other IRepository methods...
+        
 
         public async Task<List<User>> GetUsersByRoleWithPharmacyAsync(Guid roleId)
         {
             return await _context.Users
                 .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
-                 .Include(u => u.PharmacyDetailUsers)  // Ensure related data is loaded
-                 .Include(u => u.Region)
                  .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .ToListAsync();
+                 .ThenInclude(ur => ur.Role)
+                 .ToListAsync();
         }
     }
 }

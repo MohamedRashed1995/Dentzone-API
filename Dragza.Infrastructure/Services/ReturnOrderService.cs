@@ -44,7 +44,7 @@ namespace Dragza.Infrastructure.Services
                 {
                     Id = Guid.NewGuid(),
                     OrderId = dto.OrderId,
-                    PharmacyUserId = order.PharmacyUserId,
+                    UserId = order.UserId,
                     RequestDate = DateTime.UtcNow,
                     Statuse = (int)ReturnOrderStatus.Requested,
                     //InventoryUserId = order.OrderItems.First().ProductPrice.InventoryUserId, // CRITICAL FIX: Add missing InventoryUserId
@@ -249,7 +249,7 @@ namespace Dragza.Infrastructure.Services
             }
         }
 
-        private async Task<List<ReturnOrderDto>> CreateReturnOrdersByInventoryAsync(CreateReturnOrderDto dto, Guid pharmacyUserId,long uniqueNumber)
+        private async Task<List<ReturnOrderDto>> CreateReturnOrdersByInventoryAsync(CreateReturnOrderDto dto, Guid UserId,long uniqueNumber)
         {
             //using var transaction = await _unitOfWork.BeginTransactionAsync();
             var returnOrders = new List<ReturnOrderDto>();
@@ -261,7 +261,7 @@ namespace Dragza.Infrastructure.Services
                 if (order == null) throw new KeyNotFoundException("Order not found");
 
                 // Validate user authorization
-                if (order.PharmacyUserId != pharmacyUserId)
+                if (order.UserId != UserId)
                     throw new UnauthorizedAccessException("User not authorized to return this order");
 
                 // Create dictionary to map product prices to inventory IDs
@@ -287,7 +287,7 @@ namespace Dragza.Infrastructure.Services
                     var inventoryId = group.Key;
                     var returnOrder = await ProcessReturnGroup(
                         order,
-                        pharmacyUserId,
+                        UserId,
                         inventoryId,
                         group.ToList(),
                         inventoryMap,
@@ -311,7 +311,7 @@ namespace Dragza.Infrastructure.Services
 
         private async Task<ReturnOrderDto> ProcessReturnGroup(
             Order order,
-            Guid pharmacyUserId,
+            Guid UserId,
             Guid inventoryId,
             List<ReturnedItemDto> items,
             Dictionary<Guid, Guid> inventoryMap
@@ -322,7 +322,7 @@ namespace Dragza.Infrastructure.Services
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                PharmacyUserId = pharmacyUserId,
+                UserId = UserId,
                 RequestDate = DateTime.UtcNow,
                 Statuse = (int)ReturnOrderStatus.Requested,
                 InventoryUserId = inventoryId,
@@ -389,7 +389,7 @@ namespace Dragza.Infrastructure.Services
                 o => o.ReturnOrderNumber == returnNumber,
                 include: o => o
                     .Include(ro => ro.Order)
-                    .Include(ro => ro.PharmacyUser)
+                    .Include(ro => ro.User)
                     .Include(ro => ro.InventoryUser)
                     .Include(ro => ro.ReturnedItems)
                         .ThenInclude(ri => ri.Product)
