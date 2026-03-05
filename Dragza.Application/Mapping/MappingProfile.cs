@@ -67,7 +67,9 @@ namespace Dragza.Application.Mapping
             CreateMap<ProductPrice, ProductPriceResponseDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
                 .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.Product.ArabicName))
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Product.Id));
+                //.ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.Product.CategoryId))
+                //.ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Product.Category));
 
             CreateMap<Order, OrderDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => (OrderStatus)src.Status))
@@ -94,9 +96,10 @@ namespace Dragza.Application.Mapping
             CreateMap<UpdateReturnReasonDto, ReturnReason>();
 
             CreateMap<User, UserDto>()
-                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles.Select(ur => ur.Role.Name).ToList()));
-    //.ForMember(dest => dest.Orders, opt => opt.MapFrom(src => src.Orders))
-    //.ForMember(dest => dest.BalanceAccounts, opt => opt.MapFrom(src => src.BalanceAccounts));
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles.Select(ur => ur.Role.Name).ToList()))
+                .ForMember(dest => dest.Addresses, opt => opt.MapFrom(src => src.Addresses.ToList()));
+            //.ForMember(dest => dest.Orders, opt => opt.MapFrom(src => src.Orders))
+            //.ForMember(dest => dest.BalanceAccounts, opt => opt.MapFrom(src => src.BalanceAccounts));
 
             // لو عايز تعمل العكس (DTO -> Entity) ممكن تعمل حاجة زي:
             CreateMap<UserDto, User>()
@@ -105,20 +108,20 @@ namespace Dragza.Application.Mapping
                 .ForMember(dest => dest.BalanceAccounts, opt => opt.Ignore());
 
             //  .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.MinOrder ?? 0m));
-           
 
-    
+
+
 
             //CreateMap<ProductPrice, ProductPriceResponseDto>()
             //    .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
             //    .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.Product.ArabicName));
 
             CreateMap<ProductPrice, ProductPriceResponseDto>()
-    // ProductPrice specific fields
+                // ProductPrice specific fields
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
+                //.ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.Product.CategoryId))
+                //.ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
                 .ForMember(dest => dest.PurchasePrice, opt => opt.MapFrom(src => src.PurchasePrice))
                 .ForMember(dest => dest.SalesPrice, opt => opt.MapFrom(src => src.SalesPrice))
                 .ForMember(dest => dest.CreationDate, opt => opt.MapFrom(src => src.CreationDate ?? DateTime.Now))
@@ -133,48 +136,48 @@ namespace Dragza.Application.Mapping
     .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Product.Description))
     .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.Product.CreatedAt))
     .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.Product.UpdatedAt))
-    .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Product.Image))
-    .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Product.Category));
-	//.ForMember(dest => dest.ActiveIngredient, opt => opt.MapFrom(src => src.Product.ActiveIngerdient));
+    .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Product.Image));
+            //.ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Product.Category));
+            //.ForMember(dest => dest.ActiveIngredient, opt => opt.MapFrom(src => src.Product.ActiveIngerdient));
 
-	//		CreateMap<Product, ProductPriceResponseDto>()
-	//.ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
-	//.ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
-	//.ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
-	//.ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.ArabicName))
-	//.ForMember(dest => dest.Preef, opt => opt.MapFrom(src => src.Preef))
-	//.ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
-	//.ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-	//.ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
-	//.ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image))
-	//.ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
-	//.ForMember(dest => dest.ActiveIngredient, opt => opt.MapFrom(src => src.ActiveIngerdient))
-	//.ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
-	//.ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : ""))
-	//.ForMember(dest => dest.PurchasePrice, opt => opt.MapFrom(src =>
-	//	src.ProductPrices.Any() ?
-	//	src.ProductPrices.FirstOrDefault().PurchasePrice :
-	//	0m)) // Default to 0 since Product doesn't have PurchasePrice
-	//.ForMember(dest => dest.SalesPrice, opt => opt.MapFrom(src =>
-	//	src.ProductPrices.Any() ?
-	//	src.ProductPrices.FirstOrDefault().SalesPrice :
-	//	0m)) // Default to 0 since Product doesn't have SalesPrice
-	//.ForMember(dest => dest.CreationDate, opt => opt.MapFrom(src =>
-	//	src.UpdatedAt ?? src.CreatedAt ?? DateTime.Now))
-	//.ForMember(dest => dest.InventoryUserId, opt => opt.MapFrom(src =>
-	//	src.ProductPrices.Any() && src.ProductPrices.FirstOrDefault().InventoryUser != null ?
-	//	src.ProductPrices.FirstOrDefault().InventoryUser.Id :
-	//	Guid.Empty)) // Default to Empty since Product doesn't have InventoryUserId
-	//.ForMember(dest => dest.InventoryUserName, opt => opt.MapFrom(src =>
-	//	src.ProductPrices.Any() && src.ProductPrices.FirstOrDefault().InventoryUser != null ?
-	//	src.ProductPrices.FirstOrDefault().InventoryUser.BussinesName :
-	//	"")) // Default to empty since Product doesn't have InventoryUser
-	//.ForMember(dest => dest.StockQuantity, opt => opt.MapFrom(src =>
-	//	src.ProductPrices.Any() ?
-	//	src.ProductPrices.FirstOrDefault().StockQuantity :
-	//	0));
+            //		CreateMap<Product, ProductPriceResponseDto>()
+            //.ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+            //.ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
+            //.ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
+            //.ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.ArabicName))
+            //.ForMember(dest => dest.Preef, opt => opt.MapFrom(src => src.Preef))
+            //.ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            //.ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+            //.ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+            //.ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image))
+            //.ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
+            //.ForMember(dest => dest.ActiveIngredient, opt => opt.MapFrom(src => src.ActiveIngerdient))
+            //.ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+            //.ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : ""))
+            //.ForMember(dest => dest.PurchasePrice, opt => opt.MapFrom(src =>
+            //	src.ProductPrices.Any() ?
+            //	src.ProductPrices.FirstOrDefault().PurchasePrice :
+            //	0m)) // Default to 0 since Product doesn't have PurchasePrice
+            //.ForMember(dest => dest.SalesPrice, opt => opt.MapFrom(src =>
+            //	src.ProductPrices.Any() ?
+            //	src.ProductPrices.FirstOrDefault().SalesPrice :
+            //	0m)) // Default to 0 since Product doesn't have SalesPrice
+            //.ForMember(dest => dest.CreationDate, opt => opt.MapFrom(src =>
+            //	src.UpdatedAt ?? src.CreatedAt ?? DateTime.Now))
+            //.ForMember(dest => dest.InventoryUserId, opt => opt.MapFrom(src =>
+            //	src.ProductPrices.Any() && src.ProductPrices.FirstOrDefault().InventoryUser != null ?
+            //	src.ProductPrices.FirstOrDefault().InventoryUser.Id :
+            //	Guid.Empty)) // Default to Empty since Product doesn't have InventoryUserId
+            //.ForMember(dest => dest.InventoryUserName, opt => opt.MapFrom(src =>
+            //	src.ProductPrices.Any() && src.ProductPrices.FirstOrDefault().InventoryUser != null ?
+            //	src.ProductPrices.FirstOrDefault().InventoryUser.BussinesName :
+            //	"")) // Default to empty since Product doesn't have InventoryUser
+            //.ForMember(dest => dest.StockQuantity, opt => opt.MapFrom(src =>
+            //	src.ProductPrices.Any() ?
+            //	src.ProductPrices.FirstOrDefault().StockQuantity :
+            //	0));
 
-			//CreateMap<ActiveIngredient, ActiveIngredientDto>();
+            //CreateMap<ActiveIngredient, ActiveIngredientDto>();
 
             CreateMap<ProductPrice, ProductBestPriceDto>()
             .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Product.Id))
@@ -182,22 +185,13 @@ namespace Dragza.Application.Mapping
             .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.Product.ArabicName))
             .ForMember(dest => dest.BestSalesPrice, opt => opt.MapFrom(src => src.SalesPrice))
             .ForMember(dest => dest.PriceId, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate))
+            //.ForMember(dest => dest.PriceDate, opt => opt.MapFrom(src => src.CreationDate))
             .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.DiscountRate))
-            .ForMember(dest=>dest.Quantity,op=>op.MapFrom(src=>src.StockQuantity)).ReverseMap();
+            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.StockQuantity))
+            .ForMember(dest => dest.InventoryUser, opt => opt.MapFrom(src => src.InventoryUser)); // العناوين هتيجي تلقائي
 
 
-
-            CreateMap<Product, ProductBestPriceDto>()
-          .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
-          .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
-          .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.ArabicName))
-          .ForMember(dest => dest.BestSalesPrice, opt => opt.MapFrom(src => src.ProductPrices.FirstOrDefault().SalesPrice))
-          .ForMember(dest => dest.PriceId, opt => opt.MapFrom(src => src.ProductPrices))
-       
-          .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.ProductPrices.FirstOrDefault().DiscountRate))
-          .ForMember(dest => dest.Quantity, op => op.MapFrom(src => src.ProductPrices.FirstOrDefault().StockQuantity)).ReverseMap();
-
+            
 
 
             CreateMap<Product, ProductsDto>()
@@ -255,25 +249,25 @@ namespace Dragza.Application.Mapping
                 .ForMember(dest => dest.Preef, opt => opt.MapFrom(src => src.Product != null ? src.Product.Preef : ""))
                 .ForMember(dest => dest.ArabicDescription, opt => opt.MapFrom(src => src.Product != null ? src.Product.ArabicDescription : ""))
                 .ForMember(dest => dest.ArabicPreef, opt => opt.MapFrom(src => src.Product != null ? src.Product.ArabicPreef : ""))
-                .ForMember(dest => dest.Category, opt => opt.MapFrom((src, dest, destMember, context) =>
-                {
-                    if (src.Category == null) return null;
+                //.ForMember(dest => dest.Category, opt => opt.MapFrom((src, dest, destMember, context) =>
+                //{
+                //    if (src.Category == null) return null;
 
-                    var categoryDto = new CategoryDto
-                    {
-                        Id = src.Category.Id,
-                        Name = src.Category.Name,
-                        ArabicName = src.Category.ArabicName,
-                        Pref = src.Category.Pref,
-                        Description = src.Category.Description,
-                        ImageName = string.IsNullOrEmpty(src.Category.ImageName)
-                            ? null
-                            : (context.Items["BaseCategoryUrl"]?.ToString() ?? "") + src.Category.ImageName
-                    };
+                //    var categoryDto = new CategoryDto
+                //    {
+                //        Id = src.Category.Id,
+                //        Name = src.Category.Name,
+                //        ArabicName = src.Category.ArabicName,
+                //        Pref = src.Category.Pref,
+                //        Description = src.Category.Description,
+                //        ImageName = string.IsNullOrEmpty(src.Category.ImageName)
+                //            ? null
+                //            : (context.Items["BaseCategoryUrl"]?.ToString() ?? "") + src.Category.ImageName
+                //    };
 
-                    return categoryDto;
-                }))
-                .ForMember(dest => dest.InventoryUser, opt => opt.MapFrom(src => src.Inventory != null ? src.Inventory : null))
+                //    return categoryDto;
+                //}))
+                .ForMember(dest => dest.InventoryUser, opt => opt.MapFrom(src => src.InventoryUser != null ? src.InventoryUser : null))
                 .ForMember(dest => dest.ProductPriceId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.PurchasePrice, opt => opt.MapFrom(src => src.PurchasePrice))
                 .ForMember(dest => dest.SalesPrice, opt => opt.MapFrom(src => src.SalesPrice))
@@ -283,10 +277,13 @@ namespace Dragza.Application.Mapping
            
             CreateMap<ProductPrice, InventoryUserPriceDetailsDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
+                //.ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
                 .ForMember(dest => dest.ProductPriceId, opt => opt.MapFrom(src => src.Id));
 
-            
+            CreateMap<Address, CreateAddressDto>();
+            CreateMap<Address, AddressResponseDto>();
+            CreateMap<Address, UpdateAddressDto>();
+
 
             CreateMap<BestSellerProduct, BestSellerProductDto>()
                 .ForMember(dest => dest.ProductArabicName, opt => opt.MapFrom(src => src.Product.ArabicName));
@@ -375,7 +372,7 @@ namespace Dragza.Application.Mapping
             CreateMap<Product, ProductPrice>()
                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ProductPrices.First().Id))
                    .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
-                   .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+                   //.ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
                    //.ForMember(dest => dest.MainCategoryId, opt => opt.MapFrom(src => src.MainCategoryId))
                    .ForMember(dest => dest.CreationDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
                    .ForMember(dest => dest.UpdatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
@@ -396,8 +393,8 @@ namespace Dragza.Application.Mapping
                         src.ProductPrices != null && src.ProductPrices.Any()
                             ? src.ProductPrices.First().StockQuantity
                             : 0))
-                   .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src))
-                   .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category));
+                   .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src));
+                   //.ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category));
            //.ForMember(dest => dest.MainCategory, opt => opt.MapFrom(src => src.MainCategory));
 
             CreateMap<UpdateProductDto, Product>()

@@ -31,7 +31,7 @@ namespace Dragza.Infrastructure.Services
                 .Include(p => p.Category)
                 //.Include(p => p.BestSellerProducts)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.Inventory)
+                    .ThenInclude(pp => pp.InventoryUser)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -48,7 +48,7 @@ namespace Dragza.Infrastructure.Services
             query = query
                 .Include(p => p.Category)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.Inventory)
+                    .ThenInclude(pp => pp.InventoryUser)
                 .AsSplitQuery()
                 .OrderByDescending(p => p.CreatedAt);
 
@@ -58,7 +58,7 @@ namespace Dragza.Infrastructure.Services
                 .Take(size)
                 .Include(p => p.Category)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.Inventory)
+                    .ThenInclude(pp => pp.InventoryUser)
                 .AsSplitQuery()
                 .ToListAsync();
 
@@ -112,10 +112,10 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.Products
                 .Include(p => p.Category)
-                //.Include(p => p.ActiveIngerdient)
-                .Include(a=>a.ProductPrices)
-                //.Include(b => b.Product)
-                .Where(p => p.CategoryId == categoryId && p.ProductPrices.Count!=0)
+                .Include(p => p.ProductPrices)
+                    .ThenInclude(pp => pp.InventoryUser)
+                        .ThenInclude(u => u.Addresses) // جلب العناوين
+                .Where(p => p.CategoryId == categoryId && p.ProductPrices.Any())
                 .ToListAsync();
         }
         public IQueryable<BestSellerProduct> GetBestSellingProductsQuery(List<Guid> orderIds)
@@ -135,10 +135,10 @@ namespace Dragza.Infrastructure.Services
         public async Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId)
         {
             return await _context.ProductPrices
-                .Where(pp => pp.CategoryId == categoryId && pp.IsDeleted != true)
+                .Where(pp => pp.Product.CategoryId == categoryId && pp.IsDeleted != true)
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
         }
@@ -149,7 +149,7 @@ namespace Dragza.Infrastructure.Services
                 .Include(p => p.Category)
                 //.Include(p => p.ActiveIngerdient)
                 .Include(p => p.ProductPrices)
-                    .ThenInclude(pp => pp.Inventory)
+                    .ThenInclude(pp => pp.InventoryUser)
                 .Where(p => p.ProductPrices.Any(x => x.InventoryUserId == inventoryId))
                 .ToListAsync();
 

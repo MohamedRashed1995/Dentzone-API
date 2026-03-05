@@ -194,6 +194,17 @@ namespace Dragza.API.Controllers
         }
 
 
+
+
+        [HttpGet("popularproducts/{categoryId}")]
+        public async Task<IActionResult> GetPopularProducts(Guid categoryId)
+        {
+            var popularProducts = await _productService.GetPopularProductsAsync(categoryId);
+            return Ok(popularProducts);
+        }
+
+
+
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateProduct(Guid id, [FromForm] UpdateProductDto dto)
@@ -250,7 +261,7 @@ namespace Dragza.API.Controllers
         public async Task<IActionResult> GetProductsByCategoryId(Guid categoryId)
         {
             //var products = await _productService.GetProductsByCategoryAsync(categoryId);
-            var products = await _productPriceService.GetProductByCategoryAsync(categoryId);
+            var products = await _productService.GetProductsByCategoryAsync(categoryId);
             if (!products.Any())
             {
                 return NotFound("No products found for this category.");

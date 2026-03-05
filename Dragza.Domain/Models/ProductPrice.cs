@@ -10,7 +10,7 @@ public partial class ProductPrice
 
     public Guid ProductId { get; set; }
 
-    public Guid? CategoryId { get; set; }
+    //public Guid? CategoryId { get; set; }
 
     public decimal? PurchasePrice { get; set; }
 
@@ -32,12 +32,12 @@ public partial class ProductPrice
     [Column("Discount Rate")]  // exact column name in SQL Server
     public decimal DiscountRate { get; set; }
 
-    public virtual Category? Category { get; set; } = null!;
+    //public virtual Category? Category { get; set; } = null!;
 
 
     public Guid InventoryUserId { get; set; }
    [ForeignKey("InventoryUserId")]
-    public virtual User Inventory { get; set; }
+    public virtual User InventoryUser { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

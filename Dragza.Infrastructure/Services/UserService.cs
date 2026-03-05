@@ -121,8 +121,15 @@ namespace Dragza.Infrastructure.Services
                             AddressLine = a.AddressLine
                         }).ToList(),
 
+                        //Roles = u.UserRoles
+                        //    .Select(ur => ur.Role.Name)
+                        //    .ToList()
                         Roles = u.UserRoles
-                            .Select(ur => ur.Role.Name)
+                            .Select(ur => new RoleDto
+                            {
+                                Id = ur.Role.Id,
+                                Name = ur.Role.Name
+                            })
                             .ToList()
                     })
                     .ToListAsync();
@@ -138,10 +145,11 @@ namespace Dragza.Infrastructure.Services
             try
             {
                 var user = await _context.Users
-                    .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                    .FirstOrDefaultAsync(u => u.Email == loginDto.UsernameOrEmail);
-
+                        .Include(u => u.UserRoles)
+                            .ThenInclude(ur => ur.Role)
+                        .Include(u => u.Addresses) // <--- ده اللي محتاجه
+                        .FirstOrDefaultAsync(u => u.Email == loginDto.UsernameOrEmail);
+               
                 if (user == null || user.IsDeleted)
                 {
                     _logger.LogWarning("Login failed: user not found");
@@ -179,12 +187,11 @@ namespace Dragza.Infrastructure.Services
                 throw;
             }
         }
-        
 
-        
+
+
         public async Task<UserResponseDto> RegisterUserAsync(CreateUserDto createUserDto)
         {
-            // استخدام Execution Strategy الخاصة بالـ DbContext
             var strategy = _unitOfWork.DbContext.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
@@ -192,7 +199,6 @@ namespace Dragza.Infrastructure.Services
                 using var transaction = await _unitOfWork.DbContext.Database.BeginTransactionAsync();
                 try
                 {
-                    // تحقق من الايميل
                     var existingByEmail = await _unitOfWork.UserRepository
                         .FindByUsernameOrEmailAsync(createUserDto.Email);
 
@@ -204,13 +210,12 @@ namespace Dragza.Infrastructure.Services
                         createUserDto.RoleId = Guid.Parse("e48e5a9f-2074-4de9-a849-5c69fdd45e4e");
                     }
 
-
                     var user = _mapper.Map<User>(createUserDto);
                     user.Id = Guid.NewGuid();
                     user.Password = _passwordHasher.HashPassword(createUserDto.Password);
                     user.IsDeleted = false;
                     user.CreatedAt = DateTime.UtcNow;
-                    //user.Addresses = new List<Address>(createUserDto.AddressLines);
+
                     if (createUserDto.AddressLines != null && createUserDto.AddressLines.Any())
                     {
                         foreach (var line in createUserDto.AddressLines)
@@ -219,14 +224,12 @@ namespace Dragza.Infrastructure.Services
                             {
                                 Id = Guid.NewGuid(),
                                 UserId = user.Id,
-                                AddressLine = line.ToString()
+                                AddressLine = line
                             });
                         }
                     }
 
-                    // اختار role بناءً على RoleId المرسل من الـ DTO
                     var role = await _unitOfWork.RoleRepository.GetByIdAsync(createUserDto.RoleId);
-                    
                     if (role == null)
                         throw new ApplicationException($"Role with ID '{createUserDto.RoleId}' not found");
 
@@ -241,7 +244,20 @@ namespace Dragza.Infrastructure.Services
                     await _unitOfWork.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    return _mapper.Map<UserResponseDto>(user);
+                    // بدل الـ mapper، نعمل DTO يدويًا نظيف
+                    var userDto = new UserResponseDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        AddressLines = user.Addresses
+                            .Where(a => !string.IsNullOrEmpty(a.AddressLine))
+                            .Select(a => a.AddressLine!)
+                            .ToList()
+                    };
+
+                    return userDto;
                 }
                 catch
                 {

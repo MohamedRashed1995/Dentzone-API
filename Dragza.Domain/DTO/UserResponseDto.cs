@@ -17,6 +17,6 @@ namespace Dragza.Domain.DTO
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
         //public string? Address { get; set; }
-        public ICollection<Address> Addresses { get; set; } = new List<Address>();
+        public List<string> AddressLines { get; set; } = new List<string>();
     }
 }

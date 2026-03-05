@@ -21,6 +21,6 @@ namespace Dragza.Domain.DTO
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public string AddressLine { get; set; }
+        public string AddressLine { get; set; }="";
     }
 }

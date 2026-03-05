@@ -28,12 +28,12 @@ namespace Dragza.Infrastructure.Services
         public async Task<ProductPriceResponseDto> CreateProductPriceAsync(CreateProductPriceDto dto, Guid userId)
         {
             var product = await _unitOfWork.ProductRepository.GetByIdAsync(dto.ProductId);
-            var category = await _unitOfWork.CategoryRepository.GetByIdAsync(dto.CategoryId);
+            //var category = await _unitOfWork.CategoryRepository.GetByIdAsync(dto.CategoryId);
             var productPrice = await _unitOfWork.ProductPriceRepository.GetPricesByInventoryAndProduct(userId,dto.ProductId);
 
 
-            if (product == null || category == null)
-                throw new KeyNotFoundException("Product or Category not found");
+            if (product == null)
+                throw new KeyNotFoundException("Product not found");
 
             if (productPrice != null)
             {

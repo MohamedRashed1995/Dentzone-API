@@ -26,8 +26,8 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.ProductPrices
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .Where(pp => pp.ProductId == productId)
                 .ToListAsync();
         }
@@ -36,8 +36,8 @@ namespace Dragza.Infrastructure.Services
         {
             return await _context.ProductPrices
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .Where(pp => pp.InventoryUserId == userId)
                 .ToListAsync();
         }
@@ -49,7 +49,7 @@ namespace Dragza.Infrastructure.Services
            var productPrices=  await _context.ProductPrices
                 .Include(pp => pp.Product)
              
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.InventoryUser)
                 .Where(pp => pp.IsDeleted != true)
                 .Skip((page - 1) * size).Take(size)
                 .GroupBy(pp => pp.ProductId)
@@ -74,7 +74,7 @@ namespace Dragza.Infrastructure.Services
             var productPricesData = await _context.ProductPrices
                   .AsNoTracking()
                      .Include(pp => pp.Product)
-                     .Include(pp => pp.Inventory)
+                     .Include(pp => pp.InventoryUser)
                      .Where(pp => pp.IsDeleted != true && pp.StockQuantity > 0)
                     
                      .ToListAsync();
@@ -108,10 +108,10 @@ namespace Dragza.Infrastructure.Services
         public async Task<List<ProductPrice>> GetPricesWithDetailsByCategory(Guid categoryId)
         {
             return await _context.ProductPrices
-                .Where(pp => pp.CategoryId == categoryId && pp.IsDeleted != true)
+                .Where(pp => pp.Product.CategoryId == categoryId && pp.IsDeleted != true)
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
         }
@@ -121,8 +121,8 @@ namespace Dragza.Infrastructure.Services
             return await _context.ProductPrices
                 .Where(pp => pp.ProductId == productId && pp.IsDeleted != true)
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
         }
@@ -132,8 +132,8 @@ namespace Dragza.Infrastructure.Services
             return await _context.ProductPrices
                 .Where(pp => pp.InventoryUserId == userId && pp.IsDeleted != true)
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include (pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include (pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .ToListAsync();
         }
@@ -143,8 +143,8 @@ namespace Dragza.Infrastructure.Services
             return await _context.ProductPrices
                 .Where(pp => pp.InventoryUserId == userId && pp.ProductId == productId &&pp.IsDeleted != true)
                 .Include(pp => pp.Product)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 .OrderByDescending(pp => pp.CreationDate)
                 .FirstOrDefaultAsync();
         }
@@ -155,8 +155,8 @@ namespace Dragza.Infrastructure.Services
                     .ThenInclude(p => p.Category)
                 .Include(pp => pp.Product)
                     //.ThenInclude(p => p.ActiveIngerdient)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 //.Include(pp => pp.MainCategory)
                 .Where(pp => includeDeleted || pp.IsDeleted != true&&pp.StockQuantity>0);
 
@@ -187,7 +187,7 @@ namespace Dragza.Infrastructure.Services
         {
             var productPricesData = await _context.ProductPrices
                    .Include(pp => pp.Product)
-                   .Include(pp => pp.Inventory)
+                   .Include(pp => pp.InventoryUser)
                    .Where(pp => pp.IsDeleted != true &&pp.Product.CategoryId==categoryId&&pp.StockQuantity>0)
 
                    .ToListAsync();
@@ -204,8 +204,8 @@ namespace Dragza.Infrastructure.Services
                     .ThenInclude(p => p.Category)
                 .Include(pp => pp.Product)
                     //.ThenInclude(p => p.ActiveIngerdient)
-                .Include(pp => pp.Category)
-                .Include(pp => pp.Inventory)
+                .Include(pp => pp.Product.Category)
+                .Include(pp => pp.InventoryUser)
                 //.Include(pp => pp.MainCategory)
                 .Where(pp =>pp.IsDeleted != true&&pp.ProductId==productId&&pp.StockQuantity>0);
 

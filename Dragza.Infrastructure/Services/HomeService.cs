@@ -59,7 +59,7 @@ namespace Dragza.Infrastructure.Services
                 .GroupBy(pp => new
                 {
                     pp.InventoryUserId,
-                    InventoryName = pp.Inventory.FullName
+                    InventoryName = pp.InventoryUser.FullName
                 })
                 .Select(g => new InventorySectionDto
                 {

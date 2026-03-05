@@ -173,7 +173,7 @@ namespace Dragza.Infrastructure.Services
                 .ThenInclude(c=> c.Coupon)
                 .Include(o => o.OrderItems)
                 .ThenInclude(i => i.ProductPrice)
-                .ThenInclude(n => n.Inventory)
+                .ThenInclude(n => n.InventoryUser)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
              

@@ -32,7 +32,7 @@ namespace Dragza.API.Controllers
                 .ThenInclude(i => i.Product)
                     .Include(c => c.Items)
                 .ThenInclude(i => i.ProductPrice)
-                .ThenInclude(a=>a.Inventory)
+                .ThenInclude(a=>a.InventoryUser)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
          

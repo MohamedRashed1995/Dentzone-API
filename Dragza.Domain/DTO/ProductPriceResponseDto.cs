@@ -17,8 +17,8 @@ namespace Dragza.Domain.DTO
 		public DateTime? CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 		public string? Image { get; set; }
-		public CategoryDto Category { get; set; }
-		public Guid CategoryId { get; set; }
+		//public CategoryDto Category { get; set; }
+		//public Guid CategoryId { get; set; }
 		public string CategoryName { get; set; }
 		public decimal PurchasePrice { get; set; }
 		public decimal SalesPrice { get; set; }

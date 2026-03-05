@@ -67,6 +67,118 @@ namespace Dragza.Infrastructure.Services
         }
 
 
+
+        //public async Task<IEnumerable<InventoryPopularDto>> GetPopularProductsAsync(Guid? categoryId = null)
+        //{
+        //    var query = _context.ProductPrices
+        //.Include(pp => pp.Product)
+        //.Include(pp => pp.InventoryUser)
+        //.AsQueryable();
+
+        //    if (categoryId.HasValue)
+        //    {
+        //        query = query.Where(pp => pp.Product.CategoryId == categoryId.Value);
+        //    }
+
+        //    var popularProducts = await query
+        //        .Where(pp => pp.IsDeleted != true && pp.Product != null)
+        //        .OrderByDescending(pp => pp.DiscountRate)
+        //        .ToListAsync();
+
+        //    var grouped = popularProducts
+        //        .GroupBy(pp => pp.InventoryUser)
+        //        .Select(g => new InventoryPopularDto
+        //        {
+        //            InventoryId = g.Key.Id,
+        //            InventoryName = g.Key.FullName,
+        //            Email = g.Key.Email,
+        //            PhoneNumber = g.Key.PhoneNumber,
+        //            Products = g
+        //                .OrderByDescending(pp => pp.DiscountRate) // نتأكد من ترتيب المنتجات داخل كل Inventory
+        //                .Take(2) // أعلى منتجين فقط
+        //                .Select(pp => new PopularProductDto
+        //                {
+        //                    ProductId = pp.ProductId,
+        //                    ProductName = pp.Product.Name,
+        //                    ImageUrl = pp.Product.Image, // ممكن تضيف BaseUrl هنا
+        //                    DiscountRate = pp.DiscountRate,
+        //                    SalesPrice = pp.SalesPrice,
+        //                    StockQuantity = pp.StockQuantity
+        //                })
+        //                .ToList()
+        //        })
+        //        .ToList();
+
+        //    return grouped;
+        //}
+        public async Task<IEnumerable<InventoryPopularDto>> GetPopularProductsAsync(Guid? categoryId)
+        {
+            var query = _context.ProductPrices
+                .Include(pp => pp.Product)
+                .Include(pp => pp.InventoryUser)
+                    .ThenInclude(u => u.Addresses)
+                .Include(pp => pp.InventoryUser)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                .Where(pp => pp.Product != null);
+
+            // فلترة بالـ Category
+            if (categoryId.HasValue)
+            {
+                query = query.Where(pp => pp.Product.CategoryId == categoryId.Value);
+            }
+
+            var popularProducts = await query
+                .OrderByDescending(pp => pp.DiscountRate)
+                .ToListAsync();
+
+            var grouped = popularProducts
+                .GroupBy(pp => pp.InventoryUserId)
+                .Select(g => new InventoryPopularDto
+                {
+                    InventoryId = g.First().InventoryUser.Id,
+                    InventoryName = g.First().InventoryUser.FullName,
+                    Email = g.First().InventoryUser.Email,
+                    PhoneNumber = g.First().InventoryUser.PhoneNumber,
+
+                    Roles = g.First().InventoryUser.UserRoles
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+
+                    Addresses = g.First().InventoryUser.Addresses
+                        .Select(a => new AddressResponseDto
+                        {
+                            Id = a.Id,
+                            UserId = a.UserId,
+                            AddressLine = a.AddressLine
+                        })
+                        .ToList(),
+
+                    Products = g
+                        .OrderByDescending(pp => pp.DiscountRate)
+                        .Take(2)
+                        .Select(pp => new PopularProductDto
+                        {
+                            ProductId = pp.ProductId,
+                            ProductName = pp.Product.Name,
+                            Description = pp.Product.Description,
+                            ArabicDescription = pp.Product.ArabicDescription,
+                            Preef = pp.Product.Preef,
+                            ArabicPreef = pp.Product.ArabicPreef,
+                            ImageUrl = "http://dentzone.runasp.net/Uploads/products/" + pp.Product.Image,
+                            DiscountRate = pp.DiscountRate,
+                            SalesPrice = pp.SalesPrice,
+                            StockQuantity = pp.StockQuantity
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return grouped;
+        }
+
+
+
         public async Task<ProductResponseDto> GetProductByIdAsync(Guid id)
         {
             var product = await _unitOfWork.ProductRepository.GetProductWithDetailsAsync(id);
@@ -244,8 +356,57 @@ namespace Dragza.Infrastructure.Services
 
         public async Task<IEnumerable<ProductBestPriceDto>> GetProductsByCategoryAsync(Guid categoryId)
         {
-            var products = await _unitOfWork.ProductRepository.GetProductsByCategoryIdAsync(categoryId);
-            return _mapper.Map<IEnumerable<ProductBestPriceDto>>(products);
+            var bestPriceProducts = await _context.ProductPrices
+                .Where(pp => pp.Product.CategoryId == categoryId)
+                // Include كل حاجة محتاجينها
+                .Include(pp => pp.InventoryUser)
+                    .ThenInclude(u => u.Addresses)
+                .Include(pp => pp.InventoryUser)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role) // علشان تجيب اسم الـ role
+                .AsSplitQuery()
+                .OrderBy(pp => pp.DiscountRate)
+                .Select(pp => new ProductBestPriceDto
+                {
+                    ProductId = pp.ProductId,
+                    PriceId = pp.Id,
+                    ProductName = pp.Product.Name,
+                    ProductDescription = pp.Product.Description,
+                    ProductArabicDescription = pp.Product.ArabicDescription,
+                    ProductPreef = pp.Product.Preef,
+                    ProductArabicPreef = pp.Product.ArabicPreef,
+                    ProductImageUrl = _baseUrl + pp.Product.Image,
+                    ProductArabicName = pp.Product.ArabicName,
+                    BestSalesPrice = pp.SalesPrice,
+                    Quantity = pp.StockQuantity,
+                    Discount = pp.DiscountRate,
+                    InventoryUser = pp.InventoryUser == null ? null : new UserDto
+                    {
+                        Id = pp.InventoryUser.Id,  
+                        FullName = pp.InventoryUser.FullName,
+                        Email = pp.InventoryUser.Email,
+                        PhoneNumber = pp.InventoryUser.PhoneNumber,
+                        IsActive = pp.InventoryUser.IsActive,
+                        Addresses = pp.InventoryUser.Addresses
+                            .Select(a => new AddressResponseDto
+                            {
+                                Id = a.Id,
+                                UserId = a.UserId,
+                                AddressLine = a.AddressLine
+                            })
+                            .ToList(),
+                        Roles = pp.InventoryUser.UserRoles
+                            .Select(ur => new RoleDto
+                            {
+                                Id = ur.Role.Id,
+                                Name = ur.Role.Name
+                            })
+                            .ToList()
+                    }
+                })
+                .ToListAsync();
+
+            return bestPriceProducts;
         }
 
         public async Task<List<ProductPrice>> GetPricesWithAllProductByInventoryId(Guid inventoryId)

@@ -253,7 +253,7 @@ namespace Dragza.Infrastructure.Services
                                 include: q => q.Include(o => o.OrderItems)
                               .ThenInclude(oi => oi.Product)
                               .ThenInclude(oi => oi.ProductPrices)
-                              .ThenInclude(oi => oi.Inventory)
+                              .ThenInclude(oi => oi.InventoryUser)
                               .Include(o => o.InventoryUserId)
                               .Include(o => o.User)
             //.ThenInclude(oi => oi.ProductPrice)

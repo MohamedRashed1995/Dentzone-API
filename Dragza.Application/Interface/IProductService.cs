@@ -25,6 +25,6 @@ namespace Dragza.Application.Interface
         Task<Product>GetproductbyName(string name);
         Task<Product>GetproductbyCode(int productCode);
         Task<Product>AddProduct(ProductAddDto productDto);
-
+        Task<IEnumerable<InventoryPopularDto>> GetPopularProductsAsync(Guid? categoryId = null);
     }
 }

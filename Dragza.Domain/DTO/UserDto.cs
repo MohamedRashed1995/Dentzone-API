@@ -22,7 +22,8 @@ namespace Dragza.Domain.DTO
         public DateTime CreatedAt { get; set; }
         public List<AddressResponseDto> Addresses { get; set; } = new();
         //public ICollection<Address> Addresses { get; set; } = new List<Address>();
-        public List<string> Roles { get; set; } = new List<string>();
+        //public List<string> Role { get; set; } = new List<string>();
+        public List<RoleDto> Roles { get; set; } = new List<RoleDto>();
 
     }
 }
