@@ -103,26 +103,29 @@ namespace Dragza.API.Controllers
             return Ok(users);
         }
 
-        [HttpGet("user")]
-        //[Authorize]
-        public async Task<IActionResult> GetUsers(Guid userid)
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUsers(Guid userId)
         {
-            var users = await _userService.GetUser(userid);
-            return Ok(users);
+            var user = await _userService.GetUser(userId);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            return Ok(user);
         }
 
         [HttpGet("by-role/{roleId}")]
-        public async Task<IActionResult> GetUserbyrole (Guid roleId)
+        public async Task<IActionResult> GetUsersByRole(Guid roleId)
         {
-            var users = await _userRepository.GetUsersByRoleWithPharmacyAsync(roleId);
+            var users = await _userService.GetUsersByRoleAsync(roleId);
             return Ok(users);
         }
 
 
-        [HttpDelete("delete-user")]
-        public async Task<IActionResult> DeleteUser([FromBody] Guid Id)
+        [HttpDelete("delete-user/{userId}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
         {
-            var result = await _userService.DeleteUser(Id);
+            var result = await _userService.DeleteUser(userId);
             return Ok(result);
         }
 

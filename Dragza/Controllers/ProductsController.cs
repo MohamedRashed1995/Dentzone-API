@@ -67,20 +67,36 @@ namespace Dragza.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts([FromQuery] int lang,[FromQuery] bool includeDeleted = false, [FromQuery] string search = null, int page = 1, int size = 10)
+        public async Task<IActionResult> GetAllProducts(
+            [FromQuery] int lang,
+            [FromQuery] bool includeDeleted = false,
+            [FromQuery] string search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int size = 10)
         {
-			var products = await _productService.GetAllProductsAsync(includeDeleted, search,page,size);
-			//if (lang == 0) // Assuming 0 is for Arabic
-			//{
-			//    foreach (var product in products)
-			//    {
-			//        product.Name = product.ArabicName ; // Simulating language change for demonstration
-			//    }
-			//}
-			return Ok(products);
+            try
+            {
+                var products = await _productService.GetAllProductsAsync(includeDeleted, search, page, size);
 
-			
-		}
+                if (lang == 0) // Arabic
+                {
+                    foreach (var product in products)
+                    {
+                        product.ProductName = product.ProductArabicName;
+                        product.Preef = product.ArabicPreef;
+                        product.Description = product.ArabicDescription;
+                    }
+                }
+
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+
         [HttpGet("GetProducts")]
         public async Task<IActionResult> GetAllProductss([FromQuery] int lang,[FromQuery] bool includeDeleted = false,[FromQuery] string search = null,int page = 1,int size = 10)
         {
@@ -120,8 +136,8 @@ namespace Dragza.API.Controllers
                 {
                     foreach (var product in products)
                     {
-                        product.Name = product.Name;
-                        product.ArabicName = product.ArabicName;
+                        product.ProductName = product.ProductName;
+                        product.ProductArabicName = product.ProductArabicName;
                     }
                 }
 
@@ -243,19 +259,26 @@ namespace Dragza.API.Controllers
         //    }
         //}
 
-        [HttpGet("best-sellers")]
-        public async Task<IActionResult> GetBestSellingProducts([FromQuery] int top = 10)
+        [HttpGet("popularproducts")]
+        public async Task<IActionResult> GetPopularProducts()
         {
-            try
-            {
-                var result = await _productService.GetBestSellingProductsAsync(top);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Internal server error");
-            }
+            var popularProducts = await _productService.GetPopularProductsAsync();
+            return Ok(popularProducts);
         }
+
+        //[HttpGet("best-sellers")]
+        //public async Task<IActionResult> GetBestSellingProducts([FromQuery] int top = 10)
+        //{
+        //    try
+        //    {
+        //        var result = await _productService.GetBestSellingProductsAsync(top);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, "Internal server error");
+        //    }
+        //}
 
         [HttpGet("by-category/{categoryId}")]
         public async Task<IActionResult> GetProductsByCategoryId(Guid categoryId)
@@ -270,85 +293,85 @@ namespace Dragza.API.Controllers
             return Ok(products);
         }
 
-        [HttpGet("export-excel")]
-        [Authorize(Roles = "Inventory")]
-        public async Task<IActionResult> ExportProductsToExcel()
-        {
-            var userId = GetCurrentUserId();
+        //[HttpGet("export-excel")]
+        //[Authorize(Roles = "Inventory")]
+        //public async Task<IActionResult> ExportProductsToExcel()
+        //{
+        //    var userId = GetCurrentUserId();
 
-            //  var products = await _productService.GetPricesWithAllProductByInventoryId(userId);
-           var products=  await _productPriceService.GetPricesByUserAsync(userId);
+        //    //  var products = await _productService.GetPricesWithAllProductByInventoryId(userId);
+        //   var products=  await _productPriceService.GetPricesByUserAsync(userId);
 
-            using var workbook = new ClosedXML.Excel.XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Products");
+        //    using var workbook = new ClosedXML.Excel.XLWorkbook();
+        //    var worksheet = workbook.Worksheets.Add("Products");
 
-            // Header
-            worksheet.Cell(1, 1).Value = "ProductPriceId";
-            worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "SalesPrice";
-            worksheet.Cell(1, 4).Value = "PurchasePrice";
-            worksheet.Cell(1, 5).Value = "StockQuantity";
+        //    // Header
+        //    worksheet.Cell(1, 1).Value = "ProductPriceId";
+        //    worksheet.Cell(1, 2).Value = "Name";
+        //    worksheet.Cell(1, 3).Value = "SalesPrice";
+        //    worksheet.Cell(1, 4).Value = "PurchasePrice";
+        //    worksheet.Cell(1, 5).Value = "StockQuantity";
          
-            worksheet.Cell(1, 6).Value = "Discount";
-            worksheet.Cell(1, 7).Value = "MaxQuantity";
+        //    worksheet.Cell(1, 6).Value = "Discount";
+        //    worksheet.Cell(1, 7).Value = "MaxQuantity";
          
 
-            int row = 2;
-            foreach (var product in products)
-            {
-                worksheet.Cell(row, 1).Value = product.Id.ToString();
-                worksheet.Cell(row, 2).Value = product.ProductArabicName;
-                worksheet.Cell(row, 3).Value = product.SalesPrice;
-                worksheet.Cell(row, 4).Value = product.PurchasePrice;
-                worksheet.Cell(row, 5).Value = product.StockQuantity; // Placeholder for quantity
-                double discount = (double)((product.SalesPrice - product.PurchasePrice) / product.SalesPrice) * 100;
-                var result = double.IsFinite(discount) ? discount.ToString("F2") : "0.00";
-                worksheet.Cell(row, 6).Value = result; // Placeholder for quantity
-                worksheet.Cell(row, 7).Value = product.MaxQuantity; // Placeholder for quantity
-                row++;
-            }
+        //    int row = 2;
+        //    foreach (var product in products)
+        //    {
+        //        worksheet.Cell(row, 1).Value = product.Id.ToString();
+        //        worksheet.Cell(row, 2).Value = product.ProductArabicName;
+        //        worksheet.Cell(row, 3).Value = product.SalesPrice;
+        //        worksheet.Cell(row, 4).Value = product.PurchasePrice;
+        //        worksheet.Cell(row, 5).Value = product.StockQuantity; // Placeholder for quantity
+        //        double discount = (double)((product.SalesPrice - product.PurchasePrice) / product.SalesPrice) * 100;
+        //        var result = double.IsFinite(discount) ? discount.ToString("F2") : "0.00";
+        //        worksheet.Cell(row, 6).Value = result; // Placeholder for quantity
+        //        worksheet.Cell(row, 7).Value = product.MaxQuantity; // Placeholder for quantity
+        //        row++;
+        //    }
 
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            stream.Position = 0;
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "products.xlsx");
-        }
+        //    using var stream = new MemoryStream();
+        //    workbook.SaveAs(stream);
+        //    stream.Position = 0;
+        //    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "products.xlsx");
+        //}
 
 
-        [HttpPost("import-excel")]
-        [Authorize(Roles = "Inventory")]
-        public async Task<IActionResult> ImportProductsFromExcel(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
-            var userId = GetCurrentUserId();
+        //[HttpPost("import-excel")]
+        //[Authorize(Roles = "Inventory")]
+        //public async Task<IActionResult> ImportProductsFromExcel(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("No file uploaded.");
+        //    var userId = GetCurrentUserId();
 
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-            using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
-            var worksheet = workbook.Worksheet(1);
+        //    using var stream = new MemoryStream();
+        //    await file.CopyToAsync(stream);
+        //    using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+        //    var worksheet = workbook.Worksheet(1);
 
-            foreach (var row in worksheet.RowsUsed().Skip(1)) // Skip header
-            {
-                var productPriceId = Guid.Parse(row.Cell(1).GetString());
-                var salesPrice = decimal.Parse(row.Cell(3).GetString());
-                var purchasePrice = int.Parse(row.Cell(4).GetString());
-                var quantity = int.Parse(row.Cell(5).GetString());
-                var productId = Guid.Parse(row.Cell(6).GetString());
-                //var productName = row.Cell(1).GetString().Trim();
-                //if (string.IsNullOrWhiteSpace(productName))
-                //    continue;
+        //    foreach (var row in worksheet.RowsUsed().Skip(1)) // Skip header
+        //    {
+        //        var productPriceId = Guid.Parse(row.Cell(1).GetString());
+        //        var salesPrice = decimal.Parse(row.Cell(3).GetString());
+        //        var purchasePrice = int.Parse(row.Cell(4).GetString());
+        //        var quantity = int.Parse(row.Cell(5).GetString());
+        //        var productId = Guid.Parse(row.Cell(6).GetString());
+        //        //var productName = row.Cell(1).GetString().Trim();
+        //        //if (string.IsNullOrWhiteSpace(productName))
+        //        //    continue;
 
-                //var salesPrice = row.Cell(2).GetValue<decimal>();
-                //var discountRate = row.Cell(3).GetValue<decimal>();
-                //var stockQuantity = row.Cell(4).GetValue<int>();
-                //var maxQuantity = row.Cell(5).GetValue<int>();
+        //        //var salesPrice = row.Cell(2).GetValue<decimal>();
+        //        //var discountRate = row.Cell(3).GetValue<decimal>();
+        //        //var stockQuantity = row.Cell(4).GetValue<int>();
+        //        //var maxQuantity = row.Cell(5).GetValue<int>();
 
-              //  await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity, quantity,userId);
-            }
+        //      //  await _productPriceService.UpdateProductPriceAndQuantityAsync(productId,productPriceId, salesPrice, purchasePrice, quantity, quantity,userId);
+        //    }
 
-            return Ok("Products updated successfully.");
-        }
+        //    return Ok("Products updated successfully.");
+        //}
 
 
         //[HttpPost("ImportAddProductsFromExcel")]
@@ -390,114 +413,114 @@ namespace Dragza.API.Controllers
         //}
 
 
-        [HttpPost("ImportAddProductsFromExcel")]
-        public async Task<IActionResult> ImportAddProductsFromExcel(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+        //[HttpPost("ImportAddProductsFromExcel")]
+        //public async Task<IActionResult> ImportAddProductsFromExcel(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("No file uploaded.");
 
-            var userId = GetCurrentUserId();
+        //    var userId = GetCurrentUserId();
 
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
+        //    using var stream = new MemoryStream();
+        //    await file.CopyToAsync(stream);
 
-            using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
-            var worksheet = workbook.Worksheet(1);
+        //    using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+        //    var worksheet = workbook.Worksheet(1);
 
-            // إضافة عمود خطأ
-            var errorColumn = worksheet.Column(6);
-            worksheet.Cell(1, 7).Value = "Error";
-            worksheet.Cell(1, 7).Style.Fill.BackgroundColor = XLColor.Red;
-            worksheet.Cell(1, 7).Style.Font.FontColor = XLColor.White;
+        //    // إضافة عمود خطأ
+        //    var errorColumn = worksheet.Column(6);
+        //    worksheet.Cell(1, 7).Value = "Error";
+        //    worksheet.Cell(1, 7).Style.Fill.BackgroundColor = XLColor.Red;
+        //    worksheet.Cell(1, 7).Style.Font.FontColor = XLColor.White;
 
-            foreach (var row in worksheet.RowsUsed().Skip(1))
-            {
-                string errorMessage = "";
+        //    foreach (var row in worksheet.RowsUsed().Skip(1))
+        //    {
+        //        string errorMessage = "";
 
-                var productName = row.Cell(1).GetString().Trim();
-                var ProductCode = row.Cell(6).GetValue<int>();
-                if (string.IsNullOrWhiteSpace(productName))
-                    continue;
+        //        var productName = row.Cell(1).GetString().Trim();
+        //        var ProductCode = row.Cell(6).GetValue<int>();
+        //        if (string.IsNullOrWhiteSpace(productName))
+        //            continue;
 
-                var product = await _productService.GetproductbyCode(ProductCode);
+        //        var product = await _productService.GetproductbyCode(ProductCode);
 
-                if (product == null)
-                {
-                    errorMessage = $"Product '{productName}' not found in Products table";
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        if (product == null)
+        //        {
+        //            errorMessage = $"Product '{productName}' not found in Products table";
+        //            row.Cell(7).Value = errorMessage;
+        //            row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
                   
-                }
-                else
-                {
-                    errorMessage = $"Product '{productName}' Is ALready Exist";
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        }
+        //        else
+        //        {
+        //            errorMessage = $"Product '{productName}' Is ALready Exist";
+        //            row.Cell(7).Value = errorMessage;
+        //            row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
                  
-                }
+        //        }
 
-                    var productPrice = product.ProductPrices
-                        .FirstOrDefault(a => a.InventoryUserId == userId);
+        //            var productPrice = product.ProductPrices
+        //                .FirstOrDefault(a => a.InventoryUserId == userId);
 
-                if (productPrice == null)
-                {
-                    errorMessage = $"Price row for '{productName}' not found";
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        if (productPrice == null)
+        //        {
+        //            errorMessage = $"Price row for '{productName}' not found";
+        //            row.Cell(7).Value = errorMessage;
+        //            row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
                   
-                }
-                else
-                {
-                    errorMessage = $"Price row for '{productName}' is Already Exist";
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        }
+        //        else
+        //        {
+        //            errorMessage = $"Price row for '{productName}' is Already Exist";
+        //            row.Cell(7).Value = errorMessage;
+        //            row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
                   
-                }
+        //        }
 
-                    try
-                    {
-                        var salesPrice = row.Cell(2).GetValue<decimal>();
-                        var discountRate = row.Cell(3).GetValue<decimal>();
-                        var stockQuantity = row.Cell(4).GetValue<int>();
-                        var maxQuantity = row.Cell(5).GetValue<int>();
-                        //var ProductCode = row.Cell(6).GetValue<int>();
-                    // var purchasePrice = row.Cell(6).GetValue<int>();
-                    var purchasePrice = salesPrice - (salesPrice * (decimal)(discountRate / 100));
+        //            try
+        //            {
+        //                var salesPrice = row.Cell(2).GetValue<decimal>();
+        //                var discountRate = row.Cell(3).GetValue<decimal>();
+        //                var stockQuantity = row.Cell(4).GetValue<int>();
+        //                var maxQuantity = row.Cell(5).GetValue<int>();
+        //                //var ProductCode = row.Cell(6).GetValue<int>();
+        //            // var purchasePrice = row.Cell(6).GetValue<int>();
+        //            var purchasePrice = salesPrice - (salesPrice * (decimal)(discountRate / 100));
 
-                    await _productPriceService.UpdateProductPriceAndQuantityAsync(
-                            product.Id,
-                           productPrice?.Id,
-                            salesPrice,
-                            purchasePrice,
-                            stockQuantity,
-                            maxQuantity,
-                            userId,
-                            discountRate
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        errorMessage = ex.Message;
-                    }
+        //            await _productPriceService.UpdateProductPriceAndQuantityAsync(
+        //                    product.Id,
+        //                   productPrice?.Id,
+        //                    salesPrice,
+        //                    purchasePrice,
+        //                    stockQuantity,
+        //                    maxQuantity,
+        //                    userId,
+        //                    discountRate
+        //                );
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                errorMessage = ex.Message;
+        //            }
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                }
-            }
+        //        if (!string.IsNullOrEmpty(errorMessage))
+        //        {
+        //            row.Cell(7).Value = errorMessage;
+        //            row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+        //        }
+        //    }
 
-            // إرجاع الملف بعد التعديل
-            using var outputStream = new MemoryStream();
-            workbook.SaveAs(outputStream);
-            outputStream.Position = 0;
+        //    // إرجاع الملف بعد التعديل
+        //    using var outputStream = new MemoryStream();
+        //    workbook.SaveAs(outputStream);
+        //    outputStream.Position = 0;
 
-            return File(
-                outputStream.ToArray(),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "ProcessedProducts.xlsx"
-            );
-        }
+        //    return File(
+        //        outputStream.ToArray(),
+        //        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //        "ProcessedProducts.xlsx"
+        //    );
+        //}
         public static int GenerateProductCode()
         {
             return RandomNumberGenerator
@@ -510,75 +533,68 @@ namespace Dragza.API.Controllers
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
-           
 
-            //  var userId = GetCurrentUserId();
             List<ProductAddDto> productDtos = new List<ProductAddDto>();
-
-          
+            int successCount = 0;
+            int errorCount = 0;
 
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
 
             using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
             var worksheet = workbook.Worksheet(1);
-            var errorColumn = worksheet.Column(6);
-            worksheet.Cell(1, 7).Value = "Error";
-            worksheet.Cell(1, 7).Style.Fill.BackgroundColor = XLColor.Red;
-            worksheet.Cell(1, 7).Style.Font.FontColor = XLColor.White;
 
+            worksheet.Cell(1, 9).Value = "Error";
+            worksheet.Cell(1, 9).Style.Fill.BackgroundColor = XLColor.Red;
+            worksheet.Cell(1, 9).Style.Font.FontColor = XLColor.White;
 
             foreach (var row in worksheet.RowsUsed().Skip(1))
             {
                 string errorMessage = "";
 
-                var productNameEn = row.Cell(1).GetString().Trim();
-                var productNameAr = row.Cell(2).GetString().Trim();
-                if (string.IsNullOrWhiteSpace(productNameEn))
-                    continue;
-
-                var product = await _productService.GetproductbyName(productNameEn);
-
-                if (product != null)
-                {
-                    errorMessage = $"Product '{productNameAr}' Is ALready Exist";
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
-                    continue;
-                }
-               
-
-             
                 try
                 {
+                    var productNameEn = row.Cell(2).GetString().Trim();
                     var preef = row.Cell(3).GetString().Trim();
                     var description = row.Cell(4).GetString().Trim();
-                    var ActiveName = row.Cell(5).GetString().Trim();
-                    var categoryName = row.Cell(6).GetString().Trim();
-                    var category = await _categoryService.GetCategoryByNameAsync(categoryName);
-                    //var active = await _unitOfWork.ActiveIngredientRepository.GetByName(ActiveName);
 
+                    var categoryIdString = row.Cell(5).GetString().Trim();
+                    var productNameAr = row.Cell(9).GetString().Trim();
 
-                    productDtos.Add(new ProductAddDto
+                    var productCode = row.Cell(10).GetValue<int>();
+
+                    var arabicDescription = row.Cell(11).GetString().Trim();
+                    var arabicPreef = row.Cell(12).GetString().Trim();
+
+                    if (string.IsNullOrWhiteSpace(productNameEn))
+                        continue;
+
+                    if (!Guid.TryParse(categoryIdString, out Guid categoryId))
                     {
-                        Id=Guid.NewGuid(),
-                        ArabicName = productNameAr,
-                        Name = productNameEn,
-                        Description = description,
-                        Preef = preef,
-                        CategoryId = category.Id,
-                        //ActiveIngerdientId = active.Id,
-
-                    });
-
-                    foreach (var item in productDtos)
-                    {
-                        _productService.AddProduct(item);
+                        errorMessage = "Invalid CategoryId";
                     }
+                    else
+                    {
+                        productDtos.Add(new ProductAddDto
+                        {
+                            Id = Guid.NewGuid(),
 
-                   
+                            Name = productNameEn,
+                            ArabicName = productNameAr,
 
+                            Preef = preef,
+                            ArabicPreef = arabicPreef,
 
+                            Description = description,
+                            ArabicDescription = arabicDescription,
+
+                            CategoryId = categoryId,
+
+                            ProductCode = productCode
+                        });
+
+                        successCount++;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -587,21 +603,29 @@ namespace Dragza.API.Controllers
 
                 if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    row.Cell(7).Value = errorMessage;
-                    row.Cell(7).Style.Fill.BackgroundColor = XLColor.LightPink;
+                    errorCount++;
+
+                    row.Cell(9).Value = errorMessage;
+                    row.Cell(9).Style.Fill.BackgroundColor = XLColor.LightPink;
                 }
             }
 
-            // إرجاع الملف بعد التعديل
+            if (productDtos.Any())
+            {
+                await _productService.AddProductsBulk(productDtos);
+            }
+
             using var outputStream = new MemoryStream();
             workbook.SaveAs(outputStream);
             outputStream.Position = 0;
 
-            return File(
-                outputStream.ToArray(),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "ProcessedProducts.xlsx"
-            );
+            return Ok(new
+            {
+                AddedProducts = successCount,
+                Errors = errorCount,
+                Message = "Products import completed",
+                ErrorFile = "Download ProcessedProducts.xlsx if errors exist"
+            });
         }
 
 
